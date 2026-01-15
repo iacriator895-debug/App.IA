@@ -3,15 +3,12 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>QUADRO TÁTICO</title>
+  <title>QUADRO TÁTICO – PRO</title>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
   <style>
     html, body { margin: 0; padding: 0; height: 100%; background:#0b3d2e; font-family: sans-serif; overflow-x: hidden; }
     body { display:flex; flex-direction: column; align-items:center; padding-top: 15px; padding-bottom: 20px; }
-    
-    /* Estilo do Nome Atualizado */
     .project-title { color: white; font-size: 22px; font-weight: bold; margin-bottom: 15px; text-transform: uppercase; letter-spacing: 3px; border-bottom: 2px solid rgba(255,255,255,0.3); padding-bottom: 5px; }
-
     .header-inputs { display: flex; gap: 10px; margin-bottom: 10px; }
     .team-input { padding: 8px; border-radius: 4px; border: none; font-weight: bold; text-align: center; text-transform: uppercase; width: 130px; }
     .controls { display: flex; gap: 6px; margin-bottom: 10px; flex-wrap: wrap; justify-content: center; max-width: 95vw; }
@@ -19,7 +16,8 @@
     .target-selector { border-bottom: 1px solid rgba(255,255,255,0.2); padding-bottom: 10px; margin-bottom: 10px; width: 100%; display: flex; justify-content: center; gap: 10px; }
     button { padding: 10px 14px; border-radius: 25px; border: 2px solid transparent; color: white; cursor: pointer; font-weight: bold; transition: 0.2s; font-size: 11px; text-transform: uppercase; }
     #blueBtn { background: #2563eb; } #redBtn { background: #dc2626; } #arrowBtn { background: #ffffff; color: #000; }
-    #schemaBtn { background: #7c3aed; } #undoBtn { background: #f59e0b; } #clearBtn { background: #4b5563; } #saveBtn { background: #000; }
+    #schemaBtn { background: #7c3aed; } #undoBtn { background: #f59e0b; } #clearBtn { background: #4b5563; } 
+    #saveBtn { background: #000; } #shareBtn { background: #22c55e; } /* Verde WhatsApp */
     .btn-tactic { background: #10b981; font-size: 10px; padding: 8px 12px; min-width: 60px; }
     .btn-target { border: 2px solid #fff; opacity: 0.5; }
     .btn-target.selected { opacity: 1; border-color: #fbbf24; transform: scale(1.1); }
@@ -47,7 +45,8 @@
     <button id="schemaBtn">Esquemas</button>
     <button id="undoBtn">Desfazer</button>
     <button id="clearBtn">Limpar</button>
-    <button id="saveBtn">Salvar PDF</button>
+    <button id="saveBtn">PDF</button>
+    <button id="shareBtn">WhatsApp</button>
 </div>
 
 <div id="schemaRow" class="schema-row">
@@ -87,8 +86,7 @@
   }
 
   function drawField() {
-    ctx.fillStyle = '#1f7a3f';
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    ctx.fillStyle = '#1f7a3f'; ctx.fillRect(0, 0, canvas.width, canvas.height);
     ctx.strokeStyle = 'white'; ctx.lineWidth = 3;
     ctx.strokeRect(20, 20, 760, 460);
     ctx.beginPath(); ctx.moveTo(400, 20); ctx.lineTo(400, 480); ctx.stroke();
@@ -184,24 +182,51 @@
   document.getElementById('undoBtn').onclick = () => { if (history.length > 0) { const last = history.pop(); players = last.players; arrows = last.arrows; obsArea.value = last.obs || ""; drawField(); } };
   document.getElementById('clearBtn').onclick = () => { if(confirm("Limpar campo e anotações?")) { saveHistory(); players = []; arrows = []; obsArea.value = ""; drawField(); } };
 
+  // GERAR PDF
   document.getElementById('saveBtn').onclick = async () => {
     drawField();
-    const data = { players, arrows, obs: obsArea.value, bName: document.getElementById('teamBlueName').value, rName: document.getElementById('teamRedName').value };
     const doc = new jsPDF({ orientation: 'p', unit: 'mm', format: 'a4' });
-    const blueT = data.bName.toUpperCase();
-    const redT = data.rName.toUpperCase();
-    doc.setFont("helvetica", "bold");
-    doc.setFontSize(16);
+    const blueT = document.getElementById('teamBlueName').value.toUpperCase();
+    const redT = document.getElementById('teamRedName').value.toUpperCase();
+    doc.setFont("helvetica", "bold"); doc.setFontSize(16);
     doc.text(`QUADRO TÁTICO: ${blueT} vs ${redT}`, 105, 20, { align: "center" });
     const canvasImg = canvas.toDataURL("image/jpeg", 1.0);
     doc.addImage(canvasImg, 'JPEG', 15, 30, 180, 112);
-    doc.setFontSize(14);
-    doc.text("OBSERVAÇÕES TÁTICAS:", 15, 155);
-    doc.setFont("helvetica", "normal");
-    doc.setFontSize(11);
+    doc.setFontSize(14); doc.text("OBSERVAÇÕES TÁTICAS:", 15, 155);
+    doc.setFont("helvetica", "normal"); doc.setFontSize(11);
     const splitObs = doc.splitTextToSize(obsArea.value, 180);
     doc.text(splitObs, 15, 165);
     doc.save(`Tatica_${blueT}_vs_${redT}.pdf`);
+  };
+
+  // COMPARTILHAR WHATSAPP (IMAGEM)
+  document.getElementById('shareBtn').onclick = async () => {
+    drawField();
+    canvas.toBlob(async (blob) => {
+      const file = new File([blob], 'tatica.png', { type: 'image/png' });
+      const blueT = document.getElementById('teamBlueName').value;
+      const redT = document.getElementById('teamRedName').value;
+      
+      // Tenta usar a API de compartilhamento nativa (Mobile)
+      if (navigator.share && navigator.canShare && navigator.canShare({ files: [file] })) {
+        try {
+          await navigator.share({
+            files: [file],
+            title: `Tática ${blueT} x ${redT}`,
+            text: `Confira a estratégia para o jogo: ${blueT} vs ${redT}`
+          });
+        } catch (err) {
+          console.error("Erro ao compartilhar", err);
+        }
+      } else {
+        // Se não suportar (PC), apenas baixa a imagem
+        const link = document.createElement('a');
+        link.download = `Tatica_${blueT}_vs_${redT}.png`;
+        link.href = canvas.toDataURL("image/png");
+        link.click();
+        alert("O seu navegador não suporta compartilhamento direto. A imagem foi baixada!");
+      }
+    });
   };
 
   drawField();
