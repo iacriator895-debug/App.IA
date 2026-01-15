@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>RESET – Tático PDF Profissional</title>
+  <title>RESET – Tático PDF Corrigido</title>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
   <style>
     html, body { margin: 0; padding: 0; height: 100%; background:#0b3d2e; font-family: sans-serif; overflow-x: hidden; }
@@ -81,7 +81,10 @@
   }
 
   function drawField() {
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    // CORREÇÃO: Preencher o fundo explicitamente para o PDF reconhecer
+    ctx.fillStyle = '#1f7a3f';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+
     ctx.strokeStyle = 'white'; ctx.lineWidth = 3;
     ctx.strokeRect(20, 20, 760, 460);
     ctx.beginPath(); ctx.moveTo(400, 20); ctx.lineTo(400, 480); ctx.stroke();
@@ -177,36 +180,32 @@
   document.getElementById('undoBtn').onclick = () => { if (history.length > 0) { const last = history.pop(); players = last.players; arrows = last.arrows; obsArea.value = last.obs || ""; drawField(); } };
   document.getElementById('clearBtn').onclick = () => { if(confirm("Limpar campo e anotações?")) { saveHistory(); players = []; arrows = []; obsArea.value = ""; drawField(); } };
 
-  // FUNÇÃO DE SALVAR E GERAR PDF
   document.getElementById('saveBtn').onclick = async () => {
-    // 1. Salva no LocalStorage (Memória do Celular)
-    const data = { players, arrows, obs: obsArea.value, bName: document.getElementById('teamBlueName').value, rName: document.getElementById('teamRedName').value };
-    localStorage.setItem('futebol_tatico_final', JSON.stringify(data));
+    // Redesenha para garantir que o fundo está lá
+    drawField();
 
-    // 2. Gera o PDF
+    const data = { players, arrows, obs: obsArea.value, bName: document.getElementById('teamBlueName').value, rName: document.getElementById('teamRedName').value };
     const doc = new jsPDF({ orientation: 'p', unit: 'mm', format: 'a4' });
     const blueT = data.bName.toUpperCase();
     const redT = data.rName.toUpperCase();
 
     doc.setFont("helvetica", "bold");
-    doc.setFontSize(18);
+    doc.setFontSize(16);
     doc.text(`QUADRO TÁTICO: ${blueT} vs ${redT}`, 105, 20, { align: "center" });
 
-    // Converte o Canvas em Imagem para o PDF
-    const canvasImg = canvas.toDataURL("image/png");
-    doc.addImage(canvasImg, 'PNG', 15, 30, 180, 112); // Proporção 8:5
+    // Captura com compressão para evitar bugs de memória no mobile
+    const canvasImg = canvas.toDataURL("image/jpeg", 1.0);
+    doc.addImage(canvasImg, 'JPEG', 15, 30, 180, 112);
 
     doc.setFontSize(14);
     doc.text("OBSERVAÇÕES TÁTICAS:", 15, 155);
     
-    doc.setFont("arial", "normal");
-    doc.setFontSize(12);
-    // Quebra o texto para não sair da folha
+    doc.setFont("helvetica", "normal");
+    doc.setFontSize(11);
     const splitObs = doc.splitTextToSize(obsArea.value, 180);
     doc.text(splitObs, 15, 165);
 
     doc.save(`Tatica_${blueT}_vs_${redT}.pdf`);
-    alert('PDF gerado e dados salvos com sucesso!');
   };
 
   drawField();
