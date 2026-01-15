@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>RESET – Tático com Botão Seta</title>
+  <title>RESET – Tático Profissional</title>
   <style>
     html, body { margin: 0; padding: 0; height: 100%; background:#0b3d2e; font-family: sans-serif; overflow: hidden; }
     body { display:flex; flex-direction: column; align-items:center; padding-top: 15px; }
@@ -21,11 +21,11 @@
     }
     #blueBtn { background: #2563eb; }
     #redBtn { background: #dc2626; }
-    #arrowBtn { background: #ffffff; color: #000; } /* Botão Seta Branco */
+    #arrowBtn { background: #ffffff; color: #000; }
+    #undoBtn { background: #f59e0b; } /* Amarelo para Desfazer */
     #clearBtn { background: #4b5563; }
     #saveBtn { background: #000; }
     
-    /* Destaque para o botão ativo */
     button.active { border-color: #fbbf24; transform: scale(1.05); box-shadow: 0 0 12px rgba(255,255,255,0.4); }
 
     canvas {
@@ -46,6 +46,7 @@
     <button id="blueBtn">Jogador Azul</button>
     <button id="redBtn">Jogador Vermelho</button>
     <button id="arrowBtn">Seta</button>
+    <button id="undoBtn">Desfazer</button>
     <button id="clearBtn">Limpar Tudo</button>
     <button id="saveBtn">Salvar</button>
 </div>
@@ -56,29 +57,37 @@
   const canvas = document.getElementById('field');
   const ctx = canvas.getContext('2d');
 
-  let mode = null; // 'blue', 'red', 'arrow' ou null
+  let mode = null; 
   let players = [];
   let arrows = [];
+  let history = []; // Armazena os estados anteriores
+  
   let draggingPlayer = null;
   let arrowStart = null;
   let arrowEnd = null;
+
+  // Salva o estado atual no histórico antes de qualquer mudança
+  function saveHistory() {
+    const state = {
+      players: JSON.parse(JSON.stringify(players)),
+      arrows: JSON.parse(JSON.stringify(arrows))
+    };
+    history.push(state);
+    if (history.length > 20) history.shift(); // Limite de 20 "desfazeres"
+  }
 
   function drawField() {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     ctx.strokeStyle = 'rgba(255,255,255,0.8)';
     ctx.lineWidth = 3;
 
-    // Linhas do Campo
+    // Desenho do Campo
     ctx.strokeRect(20, 20, 760, 460);
     ctx.beginPath(); ctx.moveTo(400, 20); ctx.lineTo(400, 480); ctx.stroke();
     ctx.beginPath(); ctx.arc(400, 250, 60, 0, Math.PI * 2); ctx.stroke();
     ctx.beginPath(); ctx.arc(400, 250, 4, 0, Math.PI * 2); ctx.fillStyle = 'white'; ctx.fill();
     ctx.strokeRect(20, 100, 120, 300); ctx.strokeRect(20, 180, 50, 140); 
     ctx.strokeRect(660, 100, 120, 300); ctx.strokeRect(730, 180, 50, 140); 
-
-    // Pênaltis
-    ctx.beginPath(); ctx.arc(110, 250, 3, 0, Math.PI * 2); ctx.fill();
-    ctx.beginPath(); ctx.arc(690, 250, 3, 0, Math.PI * 2); ctx.fill();
 
     drawArrows();
     drawPlayers();
@@ -88,59 +97,45 @@
     }
   }
 
-  function drawSingleArrow(fromx, fromy, tox, toy, color) {
-    const headlen = 15;
-    const dx = tox - fromx;
-    const dy = toy - fromy;
-    const angle = Math.atan2(dy, dx);
-    ctx.strokeStyle = color;
-    ctx.lineWidth = 4;
-    ctx.beginPath();
-    ctx.moveTo(fromx, fromy);
-    ctx.lineTo(tox, toy);
-    ctx.lineTo(tox - headlen * Math.cos(angle - Math.PI / 6), toy - headlen * Math.sin(angle - Math.PI / 6));
-    ctx.moveTo(tox, toy);
-    ctx.lineTo(tox - headlen * Math.cos(angle + Math.PI / 6), toy - headlen * Math.sin(angle + Math.PI / 6));
+  function drawSingleArrow(fx, fy, tx, ty, color) {
+    const head = 15;
+    const angle = Math.atan2(ty - fy, tx - fx);
+    ctx.strokeStyle = color; ctx.lineWidth = 4;
+    ctx.beginPath(); ctx.moveTo(fx, fy); ctx.lineTo(tx, ty);
+    ctx.lineTo(tx - head * Math.cos(angle - Math.PI / 6), ty - head * Math.sin(angle - Math.PI / 6));
+    ctx.moveTo(tx, ty);
+    ctx.lineTo(tx - head * Math.cos(angle + Math.PI / 6), ty - head * Math.sin(angle + Math.PI / 6));
     ctx.stroke();
   }
 
-  function drawArrows() {
-    arrows.forEach(a => drawSingleArrow(a.x1, a.y1, a.x2, a.y2, "white"));
-  }
-
+  function drawArrows() { arrows.forEach(a => drawSingleArrow(a.x1, a.y1, a.x2, a.y2, "white")); }
   function drawPlayers() {
     players.forEach(p => {
-      ctx.beginPath();
-      ctx.arc(p.x, p.y, 18, 0, Math.PI * 2);
-      ctx.fillStyle = p.color === 'blue' ? '#1e40af' : '#b91c1c';
-      ctx.fill();
-      ctx.strokeStyle = 'white';
-      ctx.lineWidth = 3;
-      ctx.stroke();
+      ctx.beginPath(); ctx.arc(p.x, p.y, 18, 0, Math.PI * 2);
+      ctx.fillStyle = p.color === 'blue' ? '#1e40af' : '#b91c1c'; ctx.fill();
+      ctx.strokeStyle = 'white'; ctx.lineWidth = 3; ctx.stroke();
     });
   }
 
   function getPos(e) {
     const rect = canvas.getBoundingClientRect();
-    return {
-      x: (e.clientX - rect.left) * (canvas.width / rect.width),
-      y: (e.clientY - rect.top) * (canvas.height / rect.height)
-    };
+    return { x: (e.clientX - rect.left) * (800 / rect.width), y: (e.clientY - rect.top) * (500 / rect.height) };
   }
 
   canvas.addEventListener('pointerdown', e => {
     const pos = getPos(e);
-    // Prioridade 1: Movimentar jogador existente
     const target = players.find(p => Math.hypot(p.x - pos.x, p.y - pos.y) <= 22);
 
     if (target) {
+        saveHistory(); // Salva antes de começar a mover
         draggingPlayer = target;
     } else if (mode === 'blue' || mode === 'red') {
+        saveHistory(); // Salva antes de adicionar
         players.push({ x: pos.x, y: pos.y, color: mode });
-        mode = null; // Trava após criar
-        updateButtonVisuals();
+        mode = null; updateButtonVisuals();
     } else if (mode === 'arrow') {
-        arrowStart = pos; // Inicia seta apenas se o modo estiver selecionado
+        saveHistory(); // Salva antes de iniciar a seta
+        arrowStart = pos;
     }
     canvas.setPointerCapture(e.pointerId);
     drawField();
@@ -148,12 +143,8 @@
 
   canvas.addEventListener('pointermove', e => {
     const pos = getPos(e);
-    if (draggingPlayer) {
-      draggingPlayer.x = pos.x;
-      draggingPlayer.y = pos.y;
-    } else if (mode === 'arrow' && arrowStart) {
-      arrowEnd = pos;
-    }
+    if (draggingPlayer) { draggingPlayer.x = pos.x; draggingPlayer.y = pos.y; }
+    else if (mode === 'arrow' && arrowStart) { arrowEnd = pos; }
     drawField();
   });
 
@@ -162,16 +153,13 @@
       if (Math.hypot(arrowStart.x - arrowEnd.x, arrowStart.y - arrowEnd.y) > 15) {
         arrows.push({ x1: arrowStart.x, y1: arrowStart.y, x2: arrowEnd.x, y2: arrowEnd.y });
       }
-      mode = null; // Trava após criar a seta
-      updateButtonVisuals();
+      mode = null; updateButtonVisuals();
     }
-    draggingPlayer = null;
-    arrowStart = null;
-    arrowEnd = null;
+    draggingPlayer = null; arrowStart = null; arrowEnd = null;
     drawField();
   });
 
-  // Botões e Estados
+  // Funções dos Botões
   const bBtn = document.getElementById('blueBtn');
   const rBtn = document.getElementById('redBtn');
   const aBtn = document.getElementById('arrowBtn');
@@ -187,20 +175,28 @@
   rBtn.onclick = () => { mode = 'red'; updateButtonVisuals(); };
   aBtn.onclick = () => { mode = 'arrow'; updateButtonVisuals(); };
 
+  // LÓGICA DO DESFAZER
+  document.getElementById('undoBtn').onclick = () => {
+    if (history.length > 0) {
+      const lastState = history.pop();
+      players = lastState.players;
+      arrows = lastState.arrows;
+      drawField();
+    }
+  };
+
   document.getElementById('clearBtn').onclick = () => {
-    if(confirm("Limpar jogadores e setas?")) {
-        players = [];
-        arrows = [];
-        mode = null;
-        updateButtonVisuals();
-        drawField();
+    if(confirm("Limpar tudo?")) {
+        saveHistory();
+        players = []; arrows = []; mode = null;
+        updateButtonVisuals(); drawField();
     }
   };
 
   document.getElementById('saveBtn').onclick = () => {
     const data = { players, arrows, bName: document.getElementById('teamBlueName').value, rName: document.getElementById('teamRedName').value };
-    localStorage.setItem('futebol_tatico_completo', JSON.stringify(data));
-    alert('Tática salva!');
+    localStorage.setItem('futebol_tatico_undo', JSON.stringify(data));
+    alert('Salvo!');
   };
 
   drawField();
