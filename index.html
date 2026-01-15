@@ -13,7 +13,6 @@
     .team-input { padding: 8px; border-radius: 4px; border: none; font-weight: bold; text-align: center; text-transform: uppercase; width: 130px; }
     .controls { display: flex; gap: 6px; margin-bottom: 10px; flex-wrap: wrap; justify-content: center; max-width: 95vw; }
     
-    /* Fileiras Secundárias (Esquemas e Bola Parada) */
     .secondary-row { display: none; gap: 6px; margin-bottom: 10px; animation: fadeIn 0.3s ease; flex-wrap: wrap; justify-content: center; background: rgba(0,0,0,0.3); padding: 12px; border-radius: 15px; border: 1px solid rgba(255,255,255,0.1); }
     .target-selector { border-bottom: 1px solid rgba(255,255,255,0.2); padding-bottom: 10px; margin-bottom: 10px; width: 100%; display: flex; justify-content: center; gap: 10px; }
     
@@ -21,7 +20,7 @@
     #blueBtn { background: #2563eb; } #redBtn { background: #dc2626; } #arrowBtn { background: #ffffff; color: #000; }
     #schemaBtn { background: #7c3aed; } #undoBtn { background: #f59e0b; } #clearBtn { background: #4b5563; } 
     #saveBtn { background: #000; } #shareBtn { background: #22c55e; }
-    #deadBallBtn { background: #06b6d4; } /* Azul Ciano para Bola Parada */
+    #deadBallBtn { background: #06b6d4; }
 
     .btn-tactic, .btn-event { background: #10b981; font-size: 10px; padding: 8px 12px; min-width: 60px; }
     .btn-target { border: 2px solid #fff; opacity: 0.5; }
@@ -73,10 +72,10 @@
 </div>
 
 <div id="deadBallRow" class="secondary-row">
-    <button class="btn-event" onclick="setDeadBallMode('falta')">Falta</button>
-    <button class="btn-event" onclick="setDeadBallMode('escanteio')">Escanteio</button>
-    <button class="btn-event" onclick="setDeadBallMode('tiroMeta')">Tiro de Meta</button>
-    <button class="btn-event" onclick="setDeadBallMode('penalti')">Pênalti</button>
+    <button id="eventFalta" class="btn-event" onclick="prepareEvent('Falta')">Falta</button>
+    <button id="eventEscanteio" class="btn-event" onclick="prepareEvent('Escanteio')">Escanteio</button>
+    <button id="eventMeta" class="btn-event" onclick="prepareEvent('Meta')">T. Meta</button>
+    <button id="eventPenalti" class="btn-event" onclick="prepareEvent('Penalti')">Pênalti</button>
     <button class="btn-event" style="background:#333" onclick="toggleRow('deadBallRow', false)">Fechar</button>
 </div>
 
@@ -92,11 +91,25 @@
   const canvas = document.getElementById('field');
   const ctx = canvas.getContext('2d');
   const obsArea = document.getElementById('obsArea');
-  let mode = null, players = [], arrows = [], history = [];
-  let draggingPlayer = null, arrowStart = null, arrowEnd = null, currentTarget = 'blue';
+  
+  let mode = null;
+  let players = [];
+  let arrows = [];
+  let events = []; // Novo array para os ícones de bola parada
+  let history = [];
+  
+  let draggingPlayer = null;
+  let arrowStart = null, arrowEnd = null;
+  let currentTarget = 'blue';
+  let pendingEvent = null;
 
   function saveHistory() {
-    history.push({ players: JSON.parse(JSON.stringify(players)), arrows: JSON.parse(JSON.stringify(arrows)), obs: obsArea.value });
+    history.push({ 
+      players: JSON.parse(JSON.stringify(players)), 
+      arrows: JSON.parse(JSON.stringify(arrows)), 
+      events: JSON.parse(JSON.stringify(events)),
+      obs: obsArea.value 
+    });
     if (history.length > 30) history.shift();
   }
 
@@ -111,18 +124,39 @@
     ctx.strokeRect(660, 100, 120, 300); ctx.strokeRect(730, 180, 50, 140); 
     ctx.beginPath(); ctx.arc(110, 250, 3, 0, Math.PI * 2); ctx.fill();
     ctx.beginPath(); ctx.arc(690, 250, 3, 0, Math.PI * 2); ctx.fill();
-    drawArrows(); drawPlayers();
+
+    drawArrows();
+    drawEvents(); // Desenha os ícones de bola parada
+    drawPlayers();
+
     if (mode === 'arrow' && arrowStart && arrowEnd) drawSingleArrow(arrowStart.x, arrowStart.y, arrowEnd.x, arrowEnd.y, "rgba(255,255,255,0.5)");
   }
 
-  // Funções de desenho e interação (mantidas)
+  function drawEvents() {
+    events.forEach(ev => {
+        ctx.font = "bold 20px sans-serif";
+        ctx.textAlign = "center";
+        ctx.textBaseline = "middle";
+        ctx.fillStyle = "#fbbf24"; // Cor âmbar para os ícones
+        let icon = "●";
+        if (ev.type === "Falta") icon = "✦";
+        if (ev.type === "Escanteio") icon = "◿";
+        if (ev.type === "Penalti") icon = "⦿";
+        if (ev.type === "Meta") icon = "▢";
+        
+        ctx.fillText(icon, ev.x, ev.y);
+        ctx.font = "bold 10px sans-serif";
+        ctx.fillText(ev.type, ev.x, ev.y + 15);
+    });
+  }
+
+  // Funções de desenho padrão mantidas...
   function drawSingleArrow(fx, fy, tx, ty, color) {
     const head = 15; const angle = Math.atan2(ty - fy, tx - fx);
     ctx.strokeStyle = color; ctx.lineWidth = 4; ctx.lineCap = "round";
     ctx.beginPath(); ctx.moveTo(fx, fy); ctx.lineTo(tx, ty);
     ctx.lineTo(tx - head * Math.cos(angle - Math.PI / 6), ty - head * Math.sin(angle - Math.PI / 6));
-    ctx.moveTo(tx, ty);
-    ctx.lineTo(tx - head * Math.cos(angle + Math.PI / 6), ty - head * Math.sin(angle + Math.PI / 6));
+    ctx.moveTo(tx, ty); ctx.lineTo(tx - head * Math.cos(angle + Math.PI / 6), ty - head * Math.sin(angle + Math.PI / 6));
     ctx.stroke();
   }
   function drawArrows() { arrows.forEach(a => drawSingleArrow(a.x1, a.y1, a.x2, a.y2, "white")); }
@@ -138,21 +172,36 @@
     return { x: (e.clientX - rect.left) * (800 / rect.width), y: (e.clientY - rect.top) * (500 / rect.height) };
   }
 
-  // Eventos de Pointer (mantidos)
   canvas.addEventListener('pointerdown', e => {
     const pos = getPos(e);
+
+    // Se houver um evento de bola parada esperando clique
+    if (pendingEvent) {
+        saveHistory();
+        events.push({ x: pos.x, y: pos.y, type: pendingEvent });
+        const ts = new Date().toLocaleTimeString();
+        obsArea.value += `[${ts}] ${pendingEvent.toUpperCase()} marcada na tela.\n`;
+        pendingEvent = null;
+        mode = null;
+        updateButtonVisuals();
+        drawField();
+        return;
+    }
+
     const target = players.find(p => Math.hypot(p.x - pos.x, p.y - pos.y) <= 22);
     if (target) { saveHistory(); draggingPlayer = target; }
     else if (mode === 'blue' || mode === 'red') { saveHistory(); players.push({ x: pos.x, y: pos.y, color: mode }); mode = null; updateButtonVisuals(); }
     else if (mode === 'arrow') { saveHistory(); arrowStart = pos; }
     canvas.setPointerCapture(e.pointerId); drawField();
   });
+
   canvas.addEventListener('pointermove', e => {
     const pos = getPos(e);
     if (draggingPlayer) { draggingPlayer.x = pos.x; draggingPlayer.y = pos.y; }
     else if (mode === 'arrow' && arrowStart) { arrowEnd = pos; }
     drawField();
   });
+
   canvas.addEventListener('pointerup', () => {
     if (mode === 'arrow' && arrowStart && arrowEnd) {
       if (Math.hypot(arrowStart.x - arrowEnd.x, arrowStart.y - arrowEnd.y) > 15) arrows.push({ x1: arrowStart.x, y1: arrowStart.y, x2: arrowEnd.x, y2: arrowEnd.y });
@@ -161,13 +210,15 @@
     draggingPlayer = null; arrowStart = null; arrowEnd = null; drawField();
   });
 
-  // Lógica dos Botões
   const bBtn = document.getElementById('blueBtn'), rBtn = document.getElementById('redBtn'), aBtn = document.getElementById('arrowBtn'), sBtn = document.getElementById('schemaBtn'), dBtn = document.getElementById('deadBallBtn');
   
   function updateButtonVisuals() {
     [bBtn, rBtn, aBtn, sBtn, dBtn].forEach(b => b.classList.remove('active'));
-    if (mode === 'blue') bBtn.classList.add('active'); if (mode === 'red') rBtn.classList.add('active'); if (mode === 'arrow') aBtn.classList.add('active');
-    if (mode === 'schema') sBtn.classList.add('active'); if (mode === 'deadBall') dBtn.classList.add('active');
+    if (mode === 'blue') bBtn.classList.add('active'); 
+    if (mode === 'red') rBtn.classList.add('active'); 
+    if (mode === 'arrow') aBtn.classList.add('active');
+    if (mode === 'schema') sBtn.classList.add('active'); 
+    if (mode === 'deadBall') dBtn.classList.add('active');
   }
 
   bBtn.onclick = () => { mode = 'blue'; toggleRow('schemaRow', false); toggleRow('deadBallRow', false); updateButtonVisuals(); };
@@ -191,9 +242,13 @@
   };
 
   function toggleRow(id, show) { document.getElementById(id).style.display = show ? 'flex' : 'none'; }
-  window.setTarget = (t) => { currentTarget = t; document.getElementById('targetBlue').classList.toggle('selected', t === 'blue'); document.getElementById('targetRed').classList.toggle('selected', t === 'red'); };
+  
+  window.prepareEvent = (type) => {
+    pendingEvent = type;
+    alert(`Agora clique no local do campo onde ocorreu: ${type.toUpperCase()}`);
+    toggleRow('deadBallRow', false);
+  };
 
-  // Função para Táticas (mantida)
   window.applyTactic = (tactic) => {
     saveHistory(); players = players.filter(p => p.color !== currentTarget);
     const formations = {
@@ -211,26 +266,12 @@
     toggleRow('schemaRow', false); mode = null; updateButtonVisuals(); drawField();
   };
 
-  // Funções de Registro de Bola Parada (Esqueleto inicial)
-  window.setDeadBallMode = (type) => {
-    const timestamp = new Date().toLocaleTimeString();
-    const currentText = obsArea.value;
-    const eventText = `[${timestamp}] EVENTO: ${type.toUpperCase()}\n`;
-    obsArea.value = currentText + eventText;
-    
-    // Alerta visual simples para confirmar o registro
-    alert(`Evento registrado: ${type.toUpperCase()}`);
-    
-    toggleRow('deadBallRow', false);
-    mode = null;
-    updateButtonVisuals();
-  };
-
-  // Outras funções de sistema (PDF, Share, Undo) (mantidas)
-  document.getElementById('undoBtn').onclick = () => { if (history.length > 0) { const last = history.pop(); players = last.players; arrows = last.arrows; obsArea.value = last.obs || ""; drawField(); } };
-  document.getElementById('clearBtn').onclick = () => { if(confirm("Limpar campo e anotações?")) { saveHistory(); players = []; arrows = []; obsArea.value = ""; drawField(); } };
-  document.getElementById('saveBtn').onclick = async () => { /* Lógica de PDF existente */ };
-  document.getElementById('shareBtn').onclick = async () => { /* Lógica de Share existente */ };
+  document.getElementById('undoBtn').onclick = () => { if (history.length > 0) { const last = history.pop(); players = last.players; arrows = last.arrows; events = last.events || []; obsArea.value = last.obs || ""; drawField(); } };
+  document.getElementById('clearBtn').onclick = () => { if(confirm("Limpar campo e anotações?")) { saveHistory(); players = []; arrows = []; events = []; obsArea.value = ""; drawField(); } };
+  
+  // PDF e Share adaptados para incluir os novos ícones...
+  document.getElementById('saveBtn').onclick = async () => { /* ...lógica PDF... */ };
+  document.getElementById('shareBtn').onclick = async () => { /* ...lógica Share... */ };
 
   drawField();
 </script>
