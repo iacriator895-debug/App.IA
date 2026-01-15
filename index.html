@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>QUADRO TÁTICO – AUTOMAÇÃO TOTAL</title>
+  <title>QUADRO TÁTICO – PRO SCOUT</title>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
   <style>
     html, body { margin: 0; padding: 0; height: 100%; background:#0b3d2e; font-family: sans-serif; overflow-x: hidden; }
@@ -79,8 +79,8 @@
     <button class="btn-event" onclick="prepareEvent('Escanteio')">Escanteio</button>
     <button class="btn-event" onclick="prepareEvent('Meta')">T. Meta ⚽</button>
     <button class="btn-event" onclick="prepareEvent('Penalti')">Pênalti</button>
-    <button class="btn-event" style="background:#eab308" onclick="prepareEvent('Amarelo')">Amarelo 🟨</button>
-    <button class="btn-event" style="background:#be123c" onclick="prepareEvent('Vermelho')">Vermelho 🟥</button>
+    <button class="btn-event" style="background:#eab308" onclick="prepareEvent('Amarelo')">Amarelo</button>
+    <button class="btn-event" style="background:#be123c" onclick="prepareEvent('Vermelho')">Vermelho</button>
     <button class="btn-event" style="background:#333" onclick="toggleRow('deadBallRow', false)">Fechar</button>
 </div>
 
@@ -101,20 +101,14 @@
   let draggingPlayer = null, arrowStart = null, arrowEnd = null, currentTarget = 'blue', pendingEvent = null;
   let passesBlue = 0, passesRed = 0;
 
-  // FUNÇÃO DE AUTOMAÇÃO DE NOMES
   function updateTeamLabels() {
     const blueName = document.getElementById('teamBlueName').value.toUpperCase();
     const redName = document.getElementById('teamRedName').value.toUpperCase();
-    
-    // Atualiza botões principais
     document.getElementById('blueBtn').innerText = `JOGADOR ${blueName}`;
     document.getElementById('redBtn').innerText = `JOGADOR ${redName}`;
-    
-    // Atualiza botões de passe
     document.getElementById('labelPassBlue').innerText = `+ PASSE ${blueName}`;
     document.getElementById('labelPassRed').innerText = `+ PASSE ${redName}`;
-    
-    drawField(); // Redesenha o placar no campo com os nomes novos
+    drawField();
   }
 
   function saveHistory() {
@@ -129,12 +123,8 @@
     saveHistory();
     const blueName = document.getElementById('teamBlueName').value;
     const redName = document.getElementById('teamRedName').value;
-    
-    if(team === 'blue') passesBlue++;
-    else passesRed++;
-    
-    const ts = new Date().toLocaleTimeString();
-    obsArea.value += `[${ts}] PASSE ${team === 'blue' ? blueName : redName} registrado.\n`;
+    if(team === 'blue') passesBlue++; else passesRed++;
+    obsArea.value += `[${new Date().toLocaleTimeString()}] PASSE ${team === 'blue' ? blueName : redName} registrado.\n`;
     drawField();
   }
 
@@ -148,7 +138,6 @@
     ctx.strokeRect(20, 100, 120, 300); ctx.strokeRect(20, 180, 50, 140); 
     ctx.strokeRect(660, 100, 120, 300); ctx.strokeRect(730, 180, 50, 140); 
     
-    // Placar Dinâmico no Campo
     const bN = document.getElementById('teamBlueName').value.substring(0, 10);
     const rN = document.getElementById('teamRedName').value.substring(0, 10);
     ctx.fillStyle = 'rgba(0,0,0,0.5)'; ctx.roundRect(250, 30, 300, 40, 10); ctx.fill();
@@ -261,12 +250,9 @@
   document.getElementById('saveBtn').onclick = async () => {
     drawField();
     const doc = new jsPDF({ orientation: 'p', unit: 'mm', format: 'a4' });
-    const bN = document.getElementById('teamBlueName').value;
-    const rN = document.getElementById('teamRedName').value;
-    doc.text(`QUADRO TÁTICO: ${bN} VS ${rN}`, 105, 20, { align: "center" });
     const canvasImg = canvas.toDataURL("image/jpeg", 1.0);
     doc.addImage(canvasImg, 'JPEG', 15, 30, 180, 112);
-    doc.save(`Tatica_${bN}_vs_${rN}.pdf`);
+    doc.save(`Tatica.pdf`);
   };
 
   document.getElementById('shareBtn').onclick = async () => {
@@ -277,7 +263,7 @@
     });
   };
 
-  updateTeamLabels(); // Inicia com os nomes padrão
+  updateTeamLabels();
   drawField();
 </script>
 </body>
