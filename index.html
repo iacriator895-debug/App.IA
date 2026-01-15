@@ -3,10 +3,10 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>RESET – Arrastar, Criar e Limpar</title>
+  <title>RESET – Tático com Setas</title>
   <style>
     html, body { margin: 0; padding: 0; height: 100%; background:#0b3d2e; font-family: sans-serif; overflow: hidden; }
-    body { display:flex; flex-direction: column; align-items:center; padding-top: 20px; }
+    body { display:flex; flex-direction: column; align-items:center; padding-top: 15px; }
 
     .header-inputs { display: flex; gap: 10px; margin-bottom: 10px; }
     .team-input { 
@@ -14,20 +14,20 @@
         text-align: center; text-transform: uppercase; width: 130px;
     }
 
-    .controls { display: flex; gap: 8px; margin-bottom: 15px; flex-wrap: wrap; justify-content: center; }
+    .controls { display: flex; gap: 8px; margin-bottom: 10px; flex-wrap: wrap; justify-content: center; }
     button { 
         padding: 10px 15px; border-radius: 25px; border: 2px solid transparent; color: white; 
-        cursor: pointer; font-weight: bold; transition: 0.2s; font-size: 13px;
+        cursor: pointer; font-weight: bold; transition: 0.2s; font-size: 12px;
     }
     #blueBtn { background: #2563eb; }
     #redBtn { background: #dc2626; }
-    #clearBtn { background: #4b5563; } /* Cinza para Limpar */
+    #clearBtn { background: #4b5563; }
     #saveBtn { background: #000; }
     
     button.active { border-color: #fff; transform: scale(1.05); box-shadow: 0 0 12px rgba(255,255,255,0.4); }
 
     canvas {
-      width: 92vw; max-width: 600px; aspect-ratio: 8 / 5;
+      width: 95vw; max-width: 600px; aspect-ratio: 8 / 5;
       background:#1f7a3f; border:4px solid #fff; border-radius:12px;
       touch-action: none;
     }
@@ -43,7 +43,7 @@
 <div class="controls">
     <button id="blueBtn">Jogador Azul</button>
     <button id="redBtn">Jogador Vermelho</button>
-    <button id="clearBtn">Limpar Campo</button>
+    <button id="clearBtn">Limpar Tudo</button>
     <button id="saveBtn">Salvar</button>
 </div>
 
@@ -55,7 +55,10 @@
 
   let mode = null; 
   let players = [];
+  let arrows = [];
   let draggingPlayer = null;
+  let arrowStart = null;
+  let arrowEnd = null;
 
   function drawField() {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
@@ -67,16 +70,36 @@
     ctx.beginPath(); ctx.moveTo(400, 20); ctx.lineTo(400, 480); ctx.stroke();
     ctx.beginPath(); ctx.arc(400, 250, 60, 0, Math.PI * 2); ctx.stroke();
     ctx.beginPath(); ctx.arc(400, 250, 4, 0, Math.PI * 2); ctx.fillStyle = 'white'; ctx.fill();
-    
-    // Áreas
     ctx.strokeRect(20, 100, 120, 300); ctx.strokeRect(20, 180, 50, 140); 
     ctx.strokeRect(660, 100, 120, 300); ctx.strokeRect(730, 180, 50, 140); 
 
-    // Pênaltis
-    ctx.beginPath(); ctx.arc(110, 250, 3, 0, Math.PI * 2); ctx.fill();
-    ctx.beginPath(); ctx.arc(690, 250, 3, 0, Math.PI * 2); ctx.fill();
-    
+    drawArrows();
     drawPlayers();
+    
+    // Desenha seta temporária enquanto arrasta
+    if (arrowStart && arrowEnd) {
+      drawSingleArrow(arrowStart.x, arrowStart.y, arrowEnd.x, arrowEnd.y, "rgba(255,255,255,0.5)");
+    }
+  }
+
+  function drawSingleArrow(fromx, fromy, tox, toy, color) {
+    const headlen = 15;
+    const dx = tox - fromx;
+    const dy = toy - fromy;
+    const angle = Math.atan2(dy, dx);
+    ctx.strokeStyle = color;
+    ctx.lineWidth = 4;
+    ctx.beginPath();
+    ctx.moveTo(fromx, fromy);
+    ctx.lineTo(tox, toy);
+    ctx.lineTo(tox - headlen * Math.cos(angle - Math.PI / 6), toy - headlen * Math.sin(angle - Math.PI / 6));
+    ctx.moveTo(tox, toy);
+    ctx.lineTo(tox - headlen * Math.cos(angle + Math.PI / 6), toy - headlen * Math.sin(angle + Math.PI / 6));
+    ctx.stroke();
+  }
+
+  function drawArrows() {
+    arrows.forEach(a => drawSingleArrow(a.x1, a.y1, a.x2, a.y2, "white"));
   }
 
   function drawPlayers() {
@@ -100,29 +123,46 @@
   }
 
   canvas.addEventListener('pointerdown', e => {
-    const { x, y } = getPos(e);
-    draggingPlayer = players.find(p => Math.hypot(p.x - x, p.y - y) <= 22);
+    const pos = getPos(e);
+    const target = players.find(p => Math.hypot(p.x - pos.x, p.y - pos.y) <= 22);
 
-    if (!draggingPlayer && mode) {
-      players.push({ x, y, color: mode });
-      mode = null; 
-      updateButtonVisuals();
-      drawField();
+    if (target) {
+        draggingPlayer = target;
+    } else if (mode) {
+        players.push({ x: pos.x, y: pos.y, color: mode });
+        mode = null;
+        updateButtonVisuals();
+    } else {
+        arrowStart = pos; // Inicia desenho de seta se não estiver movendo jogador
     }
-    if (draggingPlayer) canvas.setPointerCapture(e.pointerId);
-  });
-
-  canvas.addEventListener('pointermove', e => {
-    if (!draggingPlayer) return;
-    const { x, y } = getPos(e);
-    draggingPlayer.x = x;
-    draggingPlayer.y = y;
+    canvas.setPointerCapture(e.pointerId);
     drawField();
   });
 
-  canvas.addEventListener('pointerup', () => draggingPlayer = null);
+  canvas.addEventListener('pointermove', e => {
+    const pos = getPos(e);
+    if (draggingPlayer) {
+      draggingPlayer.x = pos.x;
+      draggingPlayer.y = pos.y;
+    } else if (arrowStart) {
+      arrowEnd = pos;
+    }
+    drawField();
+  });
 
-  // Seleção de Botões
+  canvas.addEventListener('pointerup', () => {
+    if (arrowStart && arrowEnd) {
+      // Só cria seta se o movimento for longo o suficiente
+      if (Math.hypot(arrowStart.x - arrowEnd.x, arrowStart.y - arrowEnd.y) > 20) {
+        arrows.push({ x1: arrowStart.x, y1: arrowStart.y, x2: arrowEnd.x, y2: arrowEnd.y });
+      }
+    }
+    draggingPlayer = null;
+    arrowStart = null;
+    arrowEnd = null;
+    drawField();
+  });
+
   const bBtn = document.getElementById('blueBtn');
   const rBtn = document.getElementById('redBtn');
 
@@ -136,24 +176,18 @@
   bBtn.onclick = () => { mode = 'blue'; updateButtonVisuals(); };
   rBtn.onclick = () => { mode = 'red'; updateButtonVisuals(); };
 
-  // BOTÃO LIMPAR: Apenas esvazia o array e redesenha
   document.getElementById('clearBtn').onclick = () => {
-    if(confirm("Deseja remover todos os jogadores da tela?")) {
+    if(confirm("Limpar jogadores e setas?")) {
         players = [];
-        mode = null;
-        updateButtonVisuals();
+        arrows = [];
         drawField();
     }
   };
 
   document.getElementById('saveBtn').onclick = () => {
-    const data = {
-      blueName: document.getElementById('teamBlueName').value,
-      redName: document.getElementById('teamRedName').value,
-      players: players
-    };
-    localStorage.setItem('futebol2D_save', JSON.stringify(data));
-    alert('Formação salva com sucesso!');
+    const data = { players, arrows, bName: document.getElementById('teamBlueName').value, rName: document.getElementById('teamRedName').value };
+    localStorage.setItem('futebol_tatico', JSON.stringify(data));
+    alert('Tática salva!');
   };
 
   drawField();
