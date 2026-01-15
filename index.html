@@ -89,6 +89,18 @@
     const canvas = document.getElementById('field');
     const ctx = canvas.getContext('2d');
 
+    function resizeCanvas() {
+      const dpr = window.devicePixelRatio || 1;
+      const rect = canvas.getBoundingClientRect();
+      canvas.width = rect.width * dpr;
+      canvas.height = rect.height * dpr;
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      drawField();
+    }
+
+    window.addEventListener('resize', resizeCanvas);
+    window.addEventListener('orientationchange', resizeCanvas);
+
     let currentColor = 'blue';
     let players = [];
     let draggingPlayer = null;
@@ -240,7 +252,7 @@
       alert('Formação salva com sucesso!');
     };
 
-    drawField();
+    resizeCanvas();
   </script>
 
 </body>
