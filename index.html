@@ -3,101 +3,129 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Reset Total – Bolinhas</title>
+  <title>RESET – Arrastar Bolinhas (Pointer)</title>
   <style>
-    body {
-      margin: 0;
-      background: #0b3d2e;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      height: 100vh;
-    }
-
+    html, body { margin: 0; height: 100%; background:#0b3d2e; }
+    body { display:flex; justify-content:center; align-items:center; }
     canvas {
-      background: #1f7a3f;
-      border: 4px solid #ffffff;
-      border-radius: 12px;
-      touch-action: none; /* MUITO IMPORTANTE */
+      width: 92vw; height: 60vh; max-width: 420px; max-height: 260px;
+      background:#1f7a3f; border:4px solid #fff; border-radius:12px;
+      touch-action: none; /* essencial */
     }
   </style>
 </head>
 <body>
-
-<canvas id="canvas" width="350" height="220"></canvas>
-
+<canvas id="c"></canvas>
 <script>
-  const canvas = document.getElementById('canvas');
+  const canvas = document.getElementById('field');
   const ctx = canvas.getContext('2d');
 
-  const balls = [
-    { x: 100, y: 110, r: 14, color: 'blue' },
-    { x: 250, y: 110, r: 14, color: 'red' }
-  ];
+  let currentColor = 'blue';
+  let players = [];
+  let draggingPlayer = null;
 
-  let dragging = null;
-
-  function draw() {
+  function drawField() {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
-    balls.forEach(b => {
+
+    ctx.strokeStyle = 'white';
+    ctx.lineWidth = 2;
+
+    // Contorno
+    ctx.strokeRect(20, 20, 760, 460);
+
+    // Meio campo
+    ctx.beginPath();
+    ctx.moveTo(400, 20);
+    ctx.lineTo(400, 480);
+    ctx.stroke();
+
+    // Círculo central
+    ctx.beginPath();
+    ctx.arc(400, 250, 60, 0, Math.PI * 2);
+    ctx.stroke();
+
+    // Marca central
+    ctx.beginPath();
+    ctx.arc(400, 250, 3, 0, Math.PI * 2);
+    ctx.fillStyle = 'white';
+    ctx.fill();
+
+    // Área esquerda
+    ctx.strokeRect(20, 150, 120, 200);
+    ctx.strokeRect(20, 200, 60, 100);
+
+    // Área direita
+    ctx.strokeRect(660, 150, 120, 200);
+    ctx.strokeRect(720, 200, 60, 100);
+
+    // Pênaltis
+    ctx.beginPath();
+    ctx.arc(110, 250, 3, 0, Math.PI * 2);
+    ctx.arc(690, 250, 3, 0, Math.PI * 2);
+    ctx.fill();
+
+    drawPlayers();
+  }
+
+  function drawPlayers() {
+    players.forEach(p => {
       ctx.beginPath();
-      ctx.arc(b.x, b.y, b.r, 0, Math.PI * 2);
-      ctx.fillStyle = b.color;
+      ctx.arc(p.x, p.y, 12, 0, Math.PI * 2);
+      ctx.fillStyle = p.color;
       ctx.fill();
     });
   }
 
-  function getBall(x, y) {
-    return balls.find(b => Math.hypot(b.x - x, b.y - y) <= b.r);
+  function getPlayerAt(x, y) {
+    return players.find(p => Math.hypot(p.x - x, p.y - y) <= 14);
   }
 
-  function pos(e) {
+  function getPos(evt) {
     const rect = canvas.getBoundingClientRect();
-    if (e.touches) {
-      return {
-        x: e.touches[0].clientX - rect.left,
-        y: e.touches[0].clientY - rect.top
-      };
-    }
     return {
-      x: e.clientX - rect.left,
-      y: e.clientY - rect.top
+      x: evt.clientX - rect.left,
+      y: evt.clientY - rect.top
     };
   }
 
-  canvas.addEventListener('mousedown', e => {
-    const { x, y } = pos(e);
-    dragging = getBall(x, y);
+  // Pointer Events (funciona em mouse e toque)
+  canvas.addEventListener('pointerdown', e => {
+    const { x, y } = getPos(e);
+    draggingPlayer = getPlayerAt(x, y);
+
+    if (!draggingPlayer) {
+      players.push({ x, y, color: currentColor });
+      drawField();
+    }
+
+    canvas.setPointerCapture(e.pointerId);
   });
 
-  canvas.addEventListener('mousemove', e => {
-    if (!dragging) return;
-    const { x, y } = pos(e);
-    dragging.x = x;
-    dragging.y = y;
-    draw();
+  canvas.addEventListener('pointermove', e => {
+    if (!draggingPlayer) return;
+    const { x, y } = getPos(e);
+    draggingPlayer.x = x;
+    draggingPlayer.y = y;
+    drawField();
   });
 
-  canvas.addEventListener('mouseup', () => dragging = null);
+  canvas.addEventListener('pointerup', () => draggingPlayer = null);
+  canvas.addEventListener('pointercancel', () => draggingPlayer = null);
 
-  canvas.addEventListener('touchstart', e => {
-    const { x, y } = pos(e);
-    dragging = getBall(x, y);
-  });
+  document.getElementById('blueBtn').onclick = () => currentColor = 'blue';
+  document.getElementById('redBtn').onclick = () => currentColor = 'red';
 
-  canvas.addEventListener('touchmove', e => {
-    e.preventDefault();
-    if (!dragging) return;
-    const { x, y } = pos(e);
-    dragging.x = x;
-    dragging.y = y;
-    draw();
-  });
+  document.getElementById('saveBtn').onclick = () => {
+    const data = {
+      teamBlue: document.getElementById('teamBlue').innerText,
+      teamRed: document.getElementById('teamRed').innerText,
+      players
+    };
+    localStorage.setItem('futebol2D', JSON.stringify(data));
+    alert('Formação salva com sucesso!');
+  };
 
-  canvas.addEventListener('touchend', () => dragging = null);
-
-  draw();
+  drawField();
 </script>
-
 </body>
 </html>
