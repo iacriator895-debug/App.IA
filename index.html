@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>RESET – Tático com Setas</title>
+  <title>RESET – Tático com Botão Seta</title>
   <style>
     html, body { margin: 0; padding: 0; height: 100%; background:#0b3d2e; font-family: sans-serif; overflow: hidden; }
     body { display:flex; flex-direction: column; align-items:center; padding-top: 15px; }
@@ -21,10 +21,12 @@
     }
     #blueBtn { background: #2563eb; }
     #redBtn { background: #dc2626; }
+    #arrowBtn { background: #ffffff; color: #000; } /* Botão Seta Branco */
     #clearBtn { background: #4b5563; }
     #saveBtn { background: #000; }
     
-    button.active { border-color: #fff; transform: scale(1.05); box-shadow: 0 0 12px rgba(255,255,255,0.4); }
+    /* Destaque para o botão ativo */
+    button.active { border-color: #fbbf24; transform: scale(1.05); box-shadow: 0 0 12px rgba(255,255,255,0.4); }
 
     canvas {
       width: 95vw; max-width: 600px; aspect-ratio: 8 / 5;
@@ -43,6 +45,7 @@
 <div class="controls">
     <button id="blueBtn">Jogador Azul</button>
     <button id="redBtn">Jogador Vermelho</button>
+    <button id="arrowBtn">Seta</button>
     <button id="clearBtn">Limpar Tudo</button>
     <button id="saveBtn">Salvar</button>
 </div>
@@ -53,7 +56,7 @@
   const canvas = document.getElementById('field');
   const ctx = canvas.getContext('2d');
 
-  let mode = null; 
+  let mode = null; // 'blue', 'red', 'arrow' ou null
   let players = [];
   let arrows = [];
   let draggingPlayer = null;
@@ -73,11 +76,14 @@
     ctx.strokeRect(20, 100, 120, 300); ctx.strokeRect(20, 180, 50, 140); 
     ctx.strokeRect(660, 100, 120, 300); ctx.strokeRect(730, 180, 50, 140); 
 
+    // Pênaltis
+    ctx.beginPath(); ctx.arc(110, 250, 3, 0, Math.PI * 2); ctx.fill();
+    ctx.beginPath(); ctx.arc(690, 250, 3, 0, Math.PI * 2); ctx.fill();
+
     drawArrows();
     drawPlayers();
     
-    // Desenha seta temporária enquanto arrasta
-    if (arrowStart && arrowEnd) {
+    if (mode === 'arrow' && arrowStart && arrowEnd) {
       drawSingleArrow(arrowStart.x, arrowStart.y, arrowEnd.x, arrowEnd.y, "rgba(255,255,255,0.5)");
     }
   }
@@ -124,16 +130,17 @@
 
   canvas.addEventListener('pointerdown', e => {
     const pos = getPos(e);
+    // Prioridade 1: Movimentar jogador existente
     const target = players.find(p => Math.hypot(p.x - pos.x, p.y - pos.y) <= 22);
 
     if (target) {
         draggingPlayer = target;
-    } else if (mode) {
+    } else if (mode === 'blue' || mode === 'red') {
         players.push({ x: pos.x, y: pos.y, color: mode });
-        mode = null;
+        mode = null; // Trava após criar
         updateButtonVisuals();
-    } else {
-        arrowStart = pos; // Inicia desenho de seta se não estiver movendo jogador
+    } else if (mode === 'arrow') {
+        arrowStart = pos; // Inicia seta apenas se o modo estiver selecionado
     }
     canvas.setPointerCapture(e.pointerId);
     drawField();
@@ -144,18 +151,19 @@
     if (draggingPlayer) {
       draggingPlayer.x = pos.x;
       draggingPlayer.y = pos.y;
-    } else if (arrowStart) {
+    } else if (mode === 'arrow' && arrowStart) {
       arrowEnd = pos;
     }
     drawField();
   });
 
   canvas.addEventListener('pointerup', () => {
-    if (arrowStart && arrowEnd) {
-      // Só cria seta se o movimento for longo o suficiente
-      if (Math.hypot(arrowStart.x - arrowEnd.x, arrowStart.y - arrowEnd.y) > 20) {
+    if (mode === 'arrow' && arrowStart && arrowEnd) {
+      if (Math.hypot(arrowStart.x - arrowEnd.x, arrowStart.y - arrowEnd.y) > 15) {
         arrows.push({ x1: arrowStart.x, y1: arrowStart.y, x2: arrowEnd.x, y2: arrowEnd.y });
       }
+      mode = null; // Trava após criar a seta
+      updateButtonVisuals();
     }
     draggingPlayer = null;
     arrowStart = null;
@@ -163,30 +171,35 @@
     drawField();
   });
 
+  // Botões e Estados
   const bBtn = document.getElementById('blueBtn');
   const rBtn = document.getElementById('redBtn');
+  const aBtn = document.getElementById('arrowBtn');
 
   function updateButtonVisuals() {
-    bBtn.classList.remove('active');
-    rBtn.classList.remove('active');
+    [bBtn, rBtn, aBtn].forEach(b => b.classList.remove('active'));
     if (mode === 'blue') bBtn.classList.add('active');
     if (mode === 'red') rBtn.classList.add('active');
+    if (mode === 'arrow') aBtn.classList.add('active');
   }
 
   bBtn.onclick = () => { mode = 'blue'; updateButtonVisuals(); };
   rBtn.onclick = () => { mode = 'red'; updateButtonVisuals(); };
+  aBtn.onclick = () => { mode = 'arrow'; updateButtonVisuals(); };
 
   document.getElementById('clearBtn').onclick = () => {
     if(confirm("Limpar jogadores e setas?")) {
         players = [];
         arrows = [];
+        mode = null;
+        updateButtonVisuals();
         drawField();
     }
   };
 
   document.getElementById('saveBtn').onclick = () => {
     const data = { players, arrows, bName: document.getElementById('teamBlueName').value, rName: document.getElementById('teamRedName').value };
-    localStorage.setItem('futebol_tatico', JSON.stringify(data));
+    localStorage.setItem('futebol_tatico_completo', JSON.stringify(data));
     alert('Tática salva!');
   };
 
