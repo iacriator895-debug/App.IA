@@ -41,7 +41,7 @@
     #arrowBtn { background: #ffffff; color: #000; } #undoBtn { background: #f59e0b; }
     #saveBtn { background: #000; } #shareBtn { background: #22c55e; }
 
-    /* SUB-MENUS INTERNOS */
+    /* SUB-MENUS INTERNOS - FONTE BRANCA */
     .sub-menu { display: none; flex-wrap: wrap; gap: 5px; background: rgba(255,255,255,0.1); padding: 10px; border-radius: 8px; margin-bottom: 10px; }
     .sub-menu button { color: white !important; border: none; padding: 8px 12px; border-radius: 4px; font-weight: bold; font-size: 10px; cursor: pointer; }
     
@@ -62,13 +62,13 @@
     </div>
 
     <div class="menu-section">
-        <div class="menu-section-title">Configurar Equipes</div>
+        <div class="menu-section-title">Equipes</div>
         <input type="text" id="teamBlueName" class="team-input" value="TIME AZUL" oninput="updateTeamLabels()">
         <input type="text" id="teamRedName" class="team-input" value="TIME VERMELHO" oninput="updateTeamLabels()">
     </div>
 
     <div class="menu-section">
-        <div class="menu-section-title">Ações do Jogo</div>
+        <div class="menu-section-title">Estratégia</div>
         <button class="menu-btn btn-schema" onclick="toggleSub('schemaSub')">Esquemas</button>
         <div id="schemaSub" class="sub-menu">
             <button onclick="applyTactic('442')" style="background:#10b981">4-4-2</button>
@@ -144,39 +144,69 @@
     saveHistory();
     const name = team === 'blue' ? document.getElementById('teamBlueName').value : document.getElementById('teamRedName').value;
     if(team === 'blue') passesBlue++; else passesRed++;
-    obsArea.value += `[${new Date().toLocaleTimeString()}] PASSE ${name.toUpperCase()} contabilizado.\n`;
+    obsArea.value += `[${new Date().toLocaleTimeString()}] PASSE ${name.toUpperCase()} registrado.\n`;
     drawField();
   }
 
   function drawField() {
-    // Gramado
-    ctx.fillStyle = '#1f7a3f'; ctx.fillRect(0, 0, canvas.width, canvas.height);
-    ctx.strokeStyle = 'white'; ctx.lineWidth = 3;
+    // Fundo do Gramado
+    ctx.fillStyle = '#1f7a3f';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
     
-    // LINHAS DO CAMPO RESTAURADAS
-    ctx.strokeRect(20, 20, 760, 460); // Bordas
-    ctx.beginPath(); ctx.moveTo(400, 20); ctx.lineTo(400, 480); ctx.stroke(); // Meio
-    ctx.beginPath(); ctx.arc(400, 250, 60, 0, Math.PI * 2); ctx.stroke(); // Círculo Central
-    ctx.beginPath(); ctx.arc(400, 250, 4, 0, Math.PI * 2); ctx.fillStyle = 'white'; ctx.fill(); // Ponto Central
-    
-    // Áreas Esquerdas
+    // Configuração da Linha
+    ctx.strokeStyle = 'white';
+    ctx.lineWidth = 3;
+    ctx.lineCap = 'round';
+
+    // 1. Linhas Externas (Bordas)
+    ctx.strokeRect(20, 20, 760, 460);
+
+    // 2. Linha de Meio de Campo
+    ctx.beginPath();
+    ctx.moveTo(400, 20);
+    ctx.lineTo(400, 480);
+    ctx.stroke();
+
+    // 3. Círculo Central e Ponto Central
+    ctx.beginPath();
+    ctx.arc(400, 250, 60, 0, Math.PI * 2);
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.arc(400, 250, 4, 0, Math.PI * 2);
+    ctx.fillStyle = 'white';
+    ctx.fill();
+
+    // 4. ÁREA ESQUERDA (Completa)
     ctx.strokeRect(20, 100, 120, 300); // Grande Área
     ctx.strokeRect(20, 180, 50, 140);  // Pequena Área
-    ctx.beginPath(); ctx.arc(140, 250, 50, -Math.PI/2.5, Math.PI/2.5); ctx.stroke(); // Meia Lua
-    
-    // Áreas Direitas
+    // Meia-lua esquerda (corrigida)
+    ctx.beginPath();
+    ctx.arc(110, 250, 60, -Math.PI/2.5, Math.PI/2.5); 
+    ctx.stroke();
+
+    // 5. ÁREA DIREITA (Completa)
     ctx.strokeRect(660, 100, 120, 300); // Grande Área
     ctx.strokeRect(730, 180, 50, 140);  // Pequena Área
-    ctx.beginPath(); ctx.arc(660, 250, 50, Math.PI/1.6, -Math.PI/1.6); ctx.stroke(); // Meia Lua
+    // Meia-lua direita (corrigida)
+    ctx.beginPath();
+    ctx.arc(690, 250, 60, Math.PI/1.6, -Math.PI/1.6);
+    ctx.stroke();
 
-    // Placar
+    // Placar / Scout
     const bN = document.getElementById('teamBlueName').value.substring(0,8);
     const rN = document.getElementById('teamRedName').value.substring(0,8);
-    ctx.fillStyle = 'rgba(0,0,0,0.5)'; ctx.roundRect(250, 30, 300, 40, 10); ctx.fill();
-    ctx.font = "bold 14px sans-serif"; ctx.fillStyle = "white"; ctx.textAlign = "center";
-    ctx.fillText(`${bN}: ${passesBlue}  VS  ${rN}: ${passesRed}`, 400, 55);
+    ctx.fillStyle = 'rgba(0,0,0,0.6)';
+    ctx.roundRect(250, 25, 300, 35, 10);
+    ctx.fill();
+    ctx.font = "bold 13px sans-serif";
+    ctx.fillStyle = "white";
+    ctx.textAlign = "center";
+    ctx.fillText(`${bN}: ${passesBlue}   VS   ${rN}: ${passesRed}`, 400, 47);
 
-    drawArrows(); drawEvents(); drawPlayers();
+    drawArrows();
+    drawEvents();
+    drawPlayers();
+
     if (mode === 'arrow' && arrowStart && arrowEnd) drawSingleArrow(arrowStart.x, arrowStart.y, arrowEnd.x, arrowEnd.y, "rgba(255,255,255,0.5)");
   }
 
@@ -219,7 +249,6 @@
     const pos = getPos(e);
     if (pendingEvent) {
         saveHistory(); events.push({ x: pos.x, y: pos.y, type: pendingEvent });
-        obsArea.value += `[${new Date().toLocaleTimeString()}] ${pendingEvent.toUpperCase()} no campo.\n`;
         pendingEvent = null; drawField(); return;
     }
     const target = players.find(p => Math.hypot(p.x - pos.x, p.y - pos.y) <= 22);
@@ -256,7 +285,10 @@
   
   function applyTactic(t) {
       saveHistory();
-      // ... Formações mantidas ...
+      // Formação simplificada para teste
+      players = [];
+      const formations = { '442': [{x:100,y:250},{x:200,y:80},{x:200,y:190},{x:200,y:310},{x:200,y:420}] };
+      (formations[t] || formations['442']).forEach(p => players.push({x:p.x, y:p.y, color:'blue'}));
       drawField(); toggleSidebar();
   }
 
