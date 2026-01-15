@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>RESET – Tático Independente</title>
+  <title>RESET – Quadro Tático Profissional</title>
   <style>
     html, body { margin: 0; padding: 0; height: 100%; background:#0b3d2e; font-family: sans-serif; overflow: hidden; }
     body { display:flex; flex-direction: column; align-items:center; padding-top: 15px; }
@@ -11,17 +11,17 @@
     .team-input { padding: 8px; border-radius: 4px; border: none; font-weight: bold; text-align: center; text-transform: uppercase; width: 130px; }
     .controls { display: flex; gap: 6px; margin-bottom: 10px; flex-wrap: wrap; justify-content: center; max-width: 95vw; }
     
-    /* Fileira de Esquemas */
-    .schema-row { display: none; gap: 6px; margin-bottom: 10px; animation: fadeIn 0.3s ease; flex-wrap: wrap; justify-content: center; background: rgba(0,0,0,0.2); padding: 10px; border-radius: 15px; }
-    .target-selector { border-bottom: 1px solid rgba(255,255,255,0.2); padding-bottom: 8px; margin-bottom: 8px; width: 100%; display: flex; justify-content: center; gap: 10px; }
+    /* Menu de Esquemas */
+    .schema-row { display: none; gap: 6px; margin-bottom: 10px; animation: fadeIn 0.3s ease; flex-wrap: wrap; justify-content: center; background: rgba(0,0,0,0.3); padding: 12px; border-radius: 15px; border: 1px solid rgba(255,255,255,0.1); }
+    .target-selector { border-bottom: 1px solid rgba(255,255,255,0.2); padding-bottom: 10px; margin-bottom: 10px; width: 100%; display: flex; justify-content: center; gap: 10px; }
     
     button { padding: 10px 14px; border-radius: 25px; border: 2px solid transparent; color: white; cursor: pointer; font-weight: bold; transition: 0.2s; font-size: 11px; text-transform: uppercase; }
     #blueBtn { background: #2563eb; } #redBtn { background: #dc2626; } #arrowBtn { background: #ffffff; color: #000; }
     #schemaBtn { background: #7c3aed; } #undoBtn { background: #f59e0b; } #clearBtn { background: #4b5563; } #saveBtn { background: #000; }
     
-    .btn-tactic { background: #10b981; font-size: 10px; padding: 8px 12px; }
-    .btn-target { border: 2px solid #fff; opacity: 0.6; }
-    .btn-target.selected { opacity: 1; border-color: #fbbf24; transform: scale(1.1); }
+    .btn-tactic { background: #10b981; font-size: 10px; padding: 8px 12px; min-width: 60px; }
+    .btn-target { border: 2px solid #fff; opacity: 0.5; }
+    .btn-target.selected { opacity: 1; border-color: #fbbf24; transform: scale(1.1); box-shadow: 0 0 8px rgba(251,191,36,0.5); }
 
     button.active { border-color: #fbbf24; transform: scale(1.05); box-shadow: 0 0 12px rgba(255,255,255,0.4); }
     @keyframes fadeIn { from { opacity: 0; transform: translateY(-5px); } to { opacity: 1; transform: translateY(0); } }
@@ -54,6 +54,10 @@
     <button class="btn-tactic" onclick="applyTactic('433')">4-3-3</button>
     <button class="btn-tactic" onclick="applyTactic('352')">3-5-2</button>
     <button class="btn-tactic" onclick="applyTactic('541')">5-4-1</button>
+    <button class="btn-tactic" onclick="applyTactic('4231')">4-2-3-1</button>
+    <button class="btn-tactic" onclick="applyTactic('4141')">4-1-4-1</button>
+    <button class="btn-tactic" onclick="applyTactic('343')">3-4-3</button>
+    <button class="btn-tactic" onclick="applyTactic('424')">4-2-4</button>
     <button class="btn-tactic" style="background:#333" onclick="toggleSchemaRow(false)">Fechar</button>
 </div>
 
@@ -64,7 +68,7 @@
   const ctx = canvas.getContext('2d');
   let mode = null, players = [], arrows = [], history = [];
   let draggingPlayer = null, arrowStart = null, arrowEnd = null;
-  let currentTarget = 'blue'; // Define qual time receberá o esquema
+  let currentTarget = 'blue';
 
   function saveHistory() {
     history.push({ players: JSON.parse(JSON.stringify(players)), arrows: JSON.parse(JSON.stringify(arrows)) });
@@ -156,31 +160,22 @@
 
   window.applyTactic = (tactic) => {
     saveHistory();
-    // Remove apenas os jogadores do time selecionado para aplicar o novo esquema
     players = players.filter(p => p.color !== currentTarget);
     
     const formations = {
-      '442': [
-        {x: 60, y: 250}, {x: 180, y: 80}, {x: 180, y: 190}, {x: 180, y: 310}, {x: 180, y: 420},
-        {x: 320, y: 80}, {x: 320, y: 190}, {x: 320, y: 310}, {x: 320, y: 420}, {x: 480, y: 180}, {x: 480, y: 320}
-      ],
-      '433': [
-        {x: 60, y: 250}, {x: 180, y: 80}, {x: 180, y: 190}, {x: 180, y: 310}, {x: 180, y: 420},
-        {x: 320, y: 130}, {x: 320, y: 250}, {x: 320, y: 370}, {x: 520, y: 100}, {x: 550, y: 250}, {x: 520, y: 400}
-      ],
-      '352': [
-        {x: 60, y: 250}, {x: 180, y: 130}, {x: 180, y: 250}, {x: 180, y: 370}, {x: 300, y: 60},
-        {x: 300, y: 160}, {x: 300, y: 250}, {x: 300, y: 340}, {x: 300, y: 440}, {x: 500, y: 190}, {x: 500, y: 310}
-      ],
-      '541': [
-        {x: 60, y: 250}, {x: 170, y: 60}, {x: 170, y: 155}, {x: 170, y: 250}, {x: 170, y: 345}, {x: 170, y: 440},
-        {x: 330, y: 100}, {x: 330, y: 200}, {x: 330, y: 300}, {x: 330, y: 400}, {x: 530, y: 250}
-      ]
+      '442': [ {x: 60, y: 250}, {x: 180, y: 80}, {x: 180, y: 190}, {x: 180, y: 310}, {x: 180, y: 420}, {x: 320, y: 80}, {x: 320, y: 190}, {x: 320, y: 310}, {x: 320, y: 420}, {x: 480, y: 180}, {x: 480, y: 320} ],
+      '433': [ {x: 60, y: 250}, {x: 180, y: 80}, {x: 180, y: 190}, {x: 180, y: 310}, {x: 180, y: 420}, {x: 320, y: 130}, {x: 320, y: 250}, {x: 320, y: 370}, {x: 520, y: 100}, {x: 550, y: 250}, {x: 520, y: 400} ],
+      '352': [ {x: 60, y: 250}, {x: 180, y: 130}, {x: 180, y: 250}, {x: 180, y: 370}, {x: 300, y: 60}, {x: 300, y: 160}, {x: 300, y: 250}, {x: 300, y: 340}, {x: 300, y: 440}, {x: 500, y: 190}, {x: 500, y: 310} ],
+      '541': [ {x: 60, y: 250}, {x: 170, y: 60}, {x: 170, y: 155}, {x: 170, y: 250}, {x: 170, y: 345}, {x: 170, y: 440}, {x: 330, y: 100}, {x: 330, y: 200}, {x: 330, y: 300}, {x: 330, y: 400}, {x: 530, y: 250} ],
+      '4231': [ {x: 60, y: 250}, {x: 180, y: 80}, {x: 180, y: 190}, {x: 180, y: 310}, {x: 180, y: 420}, {x: 280, y: 180}, {x: 280, y: 320}, {x: 400, y: 100}, {x: 400, y: 250}, {x: 400, y: 400}, {x: 540, y: 250} ],
+      '4141': [ {x: 60, y: 250}, {x: 180, y: 80}, {x: 180, y: 190}, {x: 180, y: 310}, {x: 180, y: 420}, {x: 260, y: 250}, {x: 380, y: 100}, {x: 380, y: 200}, {x: 380, y: 300}, {x: 380, y: 400}, {x: 540, y: 250} ],
+      '343': [ {x: 60, y: 250}, {x: 180, y: 130}, {x: 180, y: 250}, {x: 180, y: 370}, {x: 320, y: 60}, {x: 320, y: 190}, {x: 320, y: 310}, {x: 320, y: 440}, {x: 500, y: 100}, {x: 550, y: 250}, {x: 500, y: 400} ],
+      '424': [ {x: 60, y: 250}, {x: 180, y: 80}, {x: 180, y: 190}, {x: 180, y: 310}, {x: 180, y: 420}, {x: 320, y: 200}, {x: 320, y: 300}, {x: 500, y: 80}, {x: 530, y: 210}, {x: 530, y: 290}, {x: 500, y: 420} ]
     };
 
     const basePos = formations[tactic];
     basePos.forEach(pos => {
-      let x = currentTarget === 'blue' ? pos.x : 800 - pos.x; // Inverte o lado se for vermelho
+      let x = currentTarget === 'blue' ? pos.x : 800 - pos.x;
       players.push({ x: x, y: pos.y, color: currentTarget });
     });
 
