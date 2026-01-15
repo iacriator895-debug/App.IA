@@ -72,9 +72,9 @@
 </div>
 
 <div id="deadBallRow" class="secondary-row">
-    <button id="eventFalta" class="btn-event" onclick="prepareEvent('Falta')">Falta</button>
+    <button id="eventFalta" class="btn-event" onclick="prepareEvent('Falta')">Falta ✝️</button>
     <button id="eventEscanteio" class="btn-event" onclick="prepareEvent('Escanteio')">Escanteio</button>
-    <button id="eventMeta" class="btn-event" onclick="prepareEvent('Meta')">T. Meta</button>
+    <button id="eventMeta" class="btn-event" onclick="prepareEvent('Meta')">T. Meta ⚽</button>
     <button id="eventPenalti" class="btn-event" onclick="prepareEvent('Penalti')">Pênalti</button>
     <button class="btn-event" style="background:#333" onclick="toggleRow('deadBallRow', false)">Fechar</button>
 </div>
@@ -92,24 +92,11 @@
   const ctx = canvas.getContext('2d');
   const obsArea = document.getElementById('obsArea');
   
-  let mode = null;
-  let players = [];
-  let arrows = [];
-  let events = []; // Novo array para os ícones de bola parada
-  let history = [];
-  
-  let draggingPlayer = null;
-  let arrowStart = null, arrowEnd = null;
-  let currentTarget = 'blue';
-  let pendingEvent = null;
+  let mode = null, players = [], arrows = [], events = [], history = [];
+  let draggingPlayer = null, arrowStart = null, arrowEnd = null, currentTarget = 'blue', pendingEvent = null;
 
   function saveHistory() {
-    history.push({ 
-      players: JSON.parse(JSON.stringify(players)), 
-      arrows: JSON.parse(JSON.stringify(arrows)), 
-      events: JSON.parse(JSON.stringify(events)),
-      obs: obsArea.value 
-    });
+    history.push({ players: JSON.parse(JSON.stringify(players)), arrows: JSON.parse(JSON.stringify(arrows)), events: JSON.parse(JSON.stringify(events)), obs: obsArea.value });
     if (history.length > 30) history.shift();
   }
 
@@ -125,32 +112,34 @@
     ctx.beginPath(); ctx.arc(110, 250, 3, 0, Math.PI * 2); ctx.fill();
     ctx.beginPath(); ctx.arc(690, 250, 3, 0, Math.PI * 2); ctx.fill();
 
-    drawArrows();
-    drawEvents(); // Desenha os ícones de bola parada
-    drawPlayers();
-
+    drawArrows(); drawEvents(); drawPlayers();
     if (mode === 'arrow' && arrowStart && arrowEnd) drawSingleArrow(arrowStart.x, arrowStart.y, arrowEnd.x, arrowEnd.y, "rgba(255,255,255,0.5)");
   }
 
+  // ÍCONES MAIORES E NOVOS SÍMBOLOS
   function drawEvents() {
     events.forEach(ev => {
-        ctx.font = "bold 20px sans-serif";
         ctx.textAlign = "center";
         ctx.textBaseline = "middle";
-        ctx.fillStyle = "#fbbf24"; // Cor âmbar para os ícones
-        let icon = "●";
-        if (ev.type === "Falta") icon = "✦";
-        if (ev.type === "Escanteio") icon = "◿";
-        if (ev.type === "Penalti") icon = "⦿";
-        if (ev.type === "Meta") icon = "▢";
+        ctx.fillStyle = "#fbbf24"; 
         
+        let icon = "";
+        let fontSize = "30px"; // Símbolos maiores
+
+        if (ev.type === "Falta") icon = "✝️";
+        else if (ev.type === "Meta") icon = "⚽";
+        else if (ev.type === "Escanteio") icon = "◿";
+        else if (ev.type === "Penalti") icon = "⦿";
+        
+        ctx.font = `${fontSize} sans-serif`;
         ctx.fillText(icon, ev.x, ev.y);
-        ctx.font = "bold 10px sans-serif";
-        ctx.fillText(ev.type, ev.x, ev.y + 15);
+        
+        ctx.font = "bold 12px sans-serif";
+        ctx.fillStyle = "white";
+        ctx.fillText(ev.type, ev.x, ev.y + 25);
     });
   }
 
-  // Funções de desenho padrão mantidas...
   function drawSingleArrow(fx, fy, tx, ty, color) {
     const head = 15; const angle = Math.atan2(ty - fy, tx - fx);
     ctx.strokeStyle = color; ctx.lineWidth = 4; ctx.lineCap = "round";
@@ -174,20 +163,13 @@
 
   canvas.addEventListener('pointerdown', e => {
     const pos = getPos(e);
-
-    // Se houver um evento de bola parada esperando clique
     if (pendingEvent) {
         saveHistory();
         events.push({ x: pos.x, y: pos.y, type: pendingEvent });
-        const ts = new Date().toLocaleTimeString();
-        obsArea.value += `[${ts}] ${pendingEvent.toUpperCase()} marcada na tela.\n`;
-        pendingEvent = null;
-        mode = null;
-        updateButtonVisuals();
-        drawField();
+        obsArea.value += `[${new Date().toLocaleTimeString()}] ${pendingEvent.toUpperCase()} registrada.\n`;
+        pendingEvent = null; mode = null; updateButtonVisuals(); drawField();
         return;
     }
-
     const target = players.find(p => Math.hypot(p.x - pos.x, p.y - pos.y) <= 22);
     if (target) { saveHistory(); draggingPlayer = target; }
     else if (mode === 'blue' || mode === 'red') { saveHistory(); players.push({ x: pos.x, y: pos.y, color: mode }); mode = null; updateButtonVisuals(); }
@@ -211,43 +193,21 @@
   });
 
   const bBtn = document.getElementById('blueBtn'), rBtn = document.getElementById('redBtn'), aBtn = document.getElementById('arrowBtn'), sBtn = document.getElementById('schemaBtn'), dBtn = document.getElementById('deadBallBtn');
-  
   function updateButtonVisuals() {
     [bBtn, rBtn, aBtn, sBtn, dBtn].forEach(b => b.classList.remove('active'));
-    if (mode === 'blue') bBtn.classList.add('active'); 
-    if (mode === 'red') rBtn.classList.add('active'); 
-    if (mode === 'arrow') aBtn.classList.add('active');
-    if (mode === 'schema') sBtn.classList.add('active'); 
-    if (mode === 'deadBall') dBtn.classList.add('active');
+    if (mode === 'blue') bBtn.classList.add('active'); if (mode === 'red') rBtn.classList.add('active'); if (mode === 'arrow') aBtn.classList.add('active');
+    if (mode === 'schema') sBtn.classList.add('active'); if (mode === 'deadBall') dBtn.classList.add('active');
   }
 
   bBtn.onclick = () => { mode = 'blue'; toggleRow('schemaRow', false); toggleRow('deadBallRow', false); updateButtonVisuals(); };
   rBtn.onclick = () => { mode = 'red'; toggleRow('schemaRow', false); toggleRow('deadBallRow', false); updateButtonVisuals(); };
   aBtn.onclick = () => { mode = 'arrow'; toggleRow('schemaRow', false); toggleRow('deadBallRow', false); updateButtonVisuals(); };
-  
-  sBtn.onclick = () => { 
-    const isVisible = document.getElementById('schemaRow').style.display === 'flex';
-    toggleRow('schemaRow', !isVisible); 
-    toggleRow('deadBallRow', false);
-    mode = !isVisible ? 'schema' : null;
-    updateButtonVisuals();
-  };
-
-  dBtn.onclick = () => {
-    const isVisible = document.getElementById('deadBallRow').style.display === 'flex';
-    toggleRow('deadBallRow', !isVisible);
-    toggleRow('schemaRow', false);
-    mode = !isVisible ? 'deadBall' : null;
-    updateButtonVisuals();
-  };
+  sBtn.onclick = () => { const isVisible = document.getElementById('schemaRow').style.display === 'flex'; toggleRow('schemaRow', !isVisible); toggleRow('deadBallRow', false); mode = !isVisible ? 'schema' : null; updateButtonVisuals(); };
+  dBtn.onclick = () => { const isVisible = document.getElementById('deadBallRow').style.display === 'flex'; toggleRow('deadBallRow', !isVisible); toggleRow('schemaRow', false); mode = !isVisible ? 'deadBall' : null; updateButtonVisuals(); };
 
   function toggleRow(id, show) { document.getElementById(id).style.display = show ? 'flex' : 'none'; }
-  
-  window.prepareEvent = (type) => {
-    pendingEvent = type;
-    alert(`Agora clique no local do campo onde ocorreu: ${type.toUpperCase()}`);
-    toggleRow('deadBallRow', false);
-  };
+  window.setTarget = (t) => { currentTarget = t; document.getElementById('targetBlue').classList.toggle('selected', t === 'blue'); document.getElementById('targetRed').classList.toggle('selected', t === 'red'); };
+  window.prepareEvent = (type) => { pendingEvent = type; toggleRow('deadBallRow', false); };
 
   window.applyTactic = (tactic) => {
     saveHistory(); players = players.filter(p => p.color !== currentTarget);
@@ -267,11 +227,36 @@
   };
 
   document.getElementById('undoBtn').onclick = () => { if (history.length > 0) { const last = history.pop(); players = last.players; arrows = last.arrows; events = last.events || []; obsArea.value = last.obs || ""; drawField(); } };
-  document.getElementById('clearBtn').onclick = () => { if(confirm("Limpar campo e anotações?")) { saveHistory(); players = []; arrows = []; events = []; obsArea.value = ""; drawField(); } };
+  document.getElementById('clearBtn').onclick = () => { if(confirm("Limpar campo?")) { saveHistory(); players = []; arrows = []; events = []; obsArea.value = ""; drawField(); } };
   
-  // PDF e Share adaptados para incluir os novos ícones...
-  document.getElementById('saveBtn').onclick = async () => { /* ...lógica PDF... */ };
-  document.getElementById('shareBtn').onclick = async () => { /* ...lógica Share... */ };
+  // PDF E WHATSAPP MANTIDOS
+  document.getElementById('saveBtn').onclick = async () => {
+    drawField();
+    const doc = new jsPDF({ orientation: 'p', unit: 'mm', format: 'a4' });
+    const blueT = document.getElementById('teamBlueName').value.toUpperCase();
+    const redT = document.getElementById('teamRedName').value.toUpperCase();
+    doc.setFont("helvetica", "bold"); doc.setFontSize(16);
+    doc.text(`QUADRO TÁTICO: ${blueT} vs ${redT}`, 105, 20, { align: "center" });
+    const canvasImg = canvas.toDataURL("image/jpeg", 1.0);
+    doc.addImage(canvasImg, 'JPEG', 15, 30, 180, 112);
+    doc.setFontSize(14); doc.text("OBSERVAÇÕES TÁTICAS:", 15, 155);
+    doc.setFont("helvetica", "normal"); doc.setFontSize(11);
+    const splitObs = doc.splitTextToSize(obsArea.value, 180);
+    doc.text(splitObs, 15, 165);
+    doc.save(`Tatica_${blueT}_vs_${redT}.pdf`);
+  };
+
+  document.getElementById('shareBtn').onclick = async () => {
+    drawField();
+    canvas.toBlob(async (blob) => {
+      const file = new File([blob], 'tatica.png', { type: 'image/png' });
+      if (navigator.share && navigator.canShare && navigator.canShare({ files: [file] })) {
+        await navigator.share({ files: [file], title: `Tática`, text: `Estratégia enviada via Quadro Tático` });
+      } else {
+        const link = document.createElement('a'); link.download = 'tatica.png'; link.href = canvas.toDataURL("image/png"); link.click();
+      }
+    });
+  };
 
   drawField();
 </script>
