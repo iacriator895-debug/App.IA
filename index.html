@@ -91,6 +91,7 @@
 
     let currentColor = 'blue';
     let players = [];
+    let draggingPlayer = null;
 
     function drawField() {
       ctx.clearRect(0, 0, canvas.width, canvas.height);
@@ -144,22 +145,75 @@
       });
     }
 
+    function getPlayerAt(x, y) {
+      return players.find(p => Math.hypot(p.x - x, p.y - y) <= 14);
+    });
+    }
+
     function addPlayer(x, y) {
       players.push({ x, y, color: currentColor });
       drawField();
     }
 
     // Clique (desktop)
-    canvas.addEventListener('click', e => {
+    // Clique (desktop) - adicionar ou arrastar
+    canvas.addEventListener('mousedown', e => {
       const rect = canvas.getBoundingClientRect();
+      const x = e.clientX - rect.left;
+      const y = e.clientY - rect.top;
+
+      draggingPlayer = getPlayerAt(x, y);
+
+      if (!draggingPlayer) {
+        addPlayer(x, y);
+      }
+    });
+
+    canvas.addEventListener('mousemove', e => {
+      if (!draggingPlayer) return;
+      const rect = canvas.getBoundingClientRect();
+      draggingPlayer.x = e.clientX - rect.left;
+      draggingPlayer.y = e.clientY - rect.top;
+      drawField();
+    });
+
+    canvas.addEventListener('mouseup', () => {
+      draggingPlayer = null;
+    });
       const x = e.clientX - rect.left;
       const y = e.clientY - rect.top;
       addPlayer(x, y);
     });
 
     // Toque (celular)
+    // Toque (celular) - adicionar ou arrastar
     canvas.addEventListener('touchstart', e => {
       e.preventDefault();
+      const rect = canvas.getBoundingClientRect();
+      const touch = e.touches[0];
+      const x = touch.clientX - rect.left;
+      const y = touch.clientY - rect.top;
+
+      draggingPlayer = getPlayerAt(x, y);
+
+      if (!draggingPlayer) {
+        addPlayer(x, y);
+      }
+    });
+
+    canvas.addEventListener('touchmove', e => {
+      if (!draggingPlayer) return;
+      e.preventDefault();
+      const rect = canvas.getBoundingClientRect();
+      const touch = e.touches[0];
+      draggingPlayer.x = touch.clientX - rect.left;
+      draggingPlayer.y = touch.clientY - rect.top;
+      drawField();
+    });
+
+    canvas.addEventListener('touchend', () => {
+      draggingPlayer = null;
+    });
       const rect = canvas.getBoundingClientRect();
       const touch = e.touches[0];
       const x = touch.clientX - rect.left;
