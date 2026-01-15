@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>QUADRO TÁTICO – PRO SCOUT</title>
+  <title>QUADRO TÁTICO – AUTOMAÇÃO TOTAL</title>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
   <style>
     html, body { margin: 0; padding: 0; height: 100%; background:#0b3d2e; font-family: sans-serif; overflow-x: hidden; }
@@ -15,11 +15,9 @@
     .team-box { display: flex; flex-direction: column; align-items: center; gap: 5px; }
     .team-input { padding: 8px; border-radius: 4px; border: none; font-weight: bold; text-align: center; text-transform: uppercase; width: 130px; }
     
-    /* Botões de Passe */
-    .btn-pass { padding: 5px 10px; border-radius: 15px; border: none; color: white; cursor: pointer; font-size: 10px; font-weight: bold; text-transform: uppercase; transition: 0.2s; }
+    .btn-pass { padding: 5px 10px; border-radius: 15px; border: none; color: white; cursor: pointer; font-size: 10px; font-weight: bold; text-transform: uppercase; transition: 0.2s; width: 100%; }
     .btn-pass-blue { background: #2563eb; }
     .btn-pass-red { background: #dc2626; }
-    .btn-pass:active { transform: scale(0.9); opacity: 0.8; }
 
     .controls { display: flex; gap: 6px; margin-bottom: 10px; flex-wrap: wrap; justify-content: center; max-width: 95vw; }
     .secondary-row { display: none; gap: 6px; margin-bottom: 10px; animation: fadeIn 0.3s ease; flex-wrap: wrap; justify-content: center; background: rgba(0,0,0,0.3); padding: 12px; border-radius: 15px; border: 1px solid rgba(255,255,255,0.1); }
@@ -46,19 +44,19 @@
 <div class="header-section">
     <div class="teams-container">
         <div class="team-box">
-            <input type="text" id="teamBlueName" class="team-input" value="TIME AZUL">
-            <button class="btn-pass btn-pass-blue" onclick="addPass('blue')">+ PASSE</button>
+            <input type="text" id="teamBlueName" class="team-input" value="TIME AZUL" oninput="updateTeamLabels()">
+            <button id="labelPassBlue" class="btn-pass btn-pass-blue" onclick="addPass('blue')">+ PASSE AZUL</button>
         </div>
         <div class="team-box">
-            <input type="text" id="teamRedName" class="team-input" value="TIME VERMELHO">
-            <button class="btn-pass btn-pass-red" onclick="addPass('red')">+ PASSE</button>
+            <input type="text" id="teamRedName" class="team-input" value="TIME VERMELHO" oninput="updateTeamLabels()">
+            <button id="labelPassRed" class="btn-pass btn-pass-red" onclick="addPass('red')">+ PASSE VERMELHO</button>
         </div>
     </div>
 </div>
 
 <div class="controls">
-    <button id="blueBtn">Jogador Azul</button>
-    <button id="redBtn">Jogador Vermelho</button>
+    <button id="blueBtn">JOGADOR AZUL</button>
+    <button id="redBtn">JOGADOR VERMELHO</button>
     <button id="arrowBtn">Seta</button>
     <button id="schemaBtn">Esquemas</button>
     <button id="deadBallBtn">Bola Parada</button>
@@ -101,30 +99,42 @@
   
   let mode = null, players = [], arrows = [], events = [], history = [];
   let draggingPlayer = null, arrowStart = null, arrowEnd = null, currentTarget = 'blue', pendingEvent = null;
-  
-  // Contadores de Passes
-  let passesBlue = 0;
-  let passesRed = 0;
+  let passesBlue = 0, passesRed = 0;
+
+  // FUNÇÃO DE AUTOMAÇÃO DE NOMES
+  function updateTeamLabels() {
+    const blueName = document.getElementById('teamBlueName').value.toUpperCase();
+    const redName = document.getElementById('teamRedName').value.toUpperCase();
+    
+    // Atualiza botões principais
+    document.getElementById('blueBtn').innerText = `JOGADOR ${blueName}`;
+    document.getElementById('redBtn').innerText = `JOGADOR ${redName}`;
+    
+    // Atualiza botões de passe
+    document.getElementById('labelPassBlue').innerText = `+ PASSE ${blueName}`;
+    document.getElementById('labelPassRed').innerText = `+ PASSE ${redName}`;
+    
+    drawField(); // Redesenha o placar no campo com os nomes novos
+  }
 
   function saveHistory() {
     history.push({ 
-        players: JSON.parse(JSON.stringify(players)), 
-        arrows: JSON.parse(JSON.stringify(arrows)), 
-        events: JSON.parse(JSON.stringify(events)), 
-        obs: obsArea.value,
-        pBlue: passesBlue,
-        pRed: passesRed
+        players: JSON.parse(JSON.stringify(players)), arrows: JSON.parse(JSON.stringify(arrows)), 
+        events: JSON.parse(JSON.stringify(events)), obs: obsArea.value, pBlue: passesBlue, pRed: passesRed
     });
     if (history.length > 30) history.shift();
   }
 
   function addPass(team) {
     saveHistory();
+    const blueName = document.getElementById('teamBlueName').value;
+    const redName = document.getElementById('teamRedName').value;
+    
     if(team === 'blue') passesBlue++;
     else passesRed++;
     
     const ts = new Date().toLocaleTimeString();
-    obsArea.value += `[${ts}] PASSE ${team === 'blue' ? 'AZUL' : 'VERMELHO'} contabilizado.\n`;
+    obsArea.value += `[${ts}] PASSE ${team === 'blue' ? blueName : redName} registrado.\n`;
     drawField();
   }
 
@@ -138,13 +148,12 @@
     ctx.strokeRect(20, 100, 120, 300); ctx.strokeRect(20, 180, 50, 140); 
     ctx.strokeRect(660, 100, 120, 300); ctx.strokeRect(730, 180, 50, 140); 
     
-    // DESENHAR PLACAR DE PASSES NO CAMPO
-    ctx.fillStyle = 'rgba(0,0,0,0.5)';
-    ctx.roundRect(310, 30, 180, 40, 10); ctx.fill();
-    ctx.font = "bold 14px sans-serif";
-    ctx.fillStyle = "white";
-    ctx.textAlign = "center";
-    ctx.fillText(`PASSES: ${passesBlue} - ${passesRed}`, 400, 55);
+    // Placar Dinâmico no Campo
+    const bN = document.getElementById('teamBlueName').value.substring(0, 10);
+    const rN = document.getElementById('teamRedName').value.substring(0, 10);
+    ctx.fillStyle = 'rgba(0,0,0,0.5)'; ctx.roundRect(250, 30, 300, 40, 10); ctx.fill();
+    ctx.font = "bold 14px sans-serif"; ctx.fillStyle = "white"; ctx.textAlign = "center";
+    ctx.fillText(`${bN}: ${passesBlue}   VS   ${rN}: ${passesRed}`, 400, 55);
 
     drawArrows(); drawEvents(); drawPlayers();
     if (mode === 'arrow' && arrowStart && arrowEnd) drawSingleArrow(arrowStart.x, arrowStart.y, arrowEnd.x, arrowEnd.y, "rgba(255,255,255,0.5)");
@@ -160,14 +169,11 @@
         else if (ev.type === "Penalti") icon = "⦿";
         else if (ev.type === "Amarelo") icon = "🟨";
         else if (ev.type === "Vermelho") icon = "🟥";
-        ctx.font = `30px sans-serif`;
-        ctx.fillText(icon, ev.x, ev.y);
-        ctx.font = "bold 11px sans-serif"; ctx.fillStyle = "white";
-        ctx.fillText(ev.type, ev.x, ev.y + 25);
+        ctx.font = `30px sans-serif`; ctx.fillText(icon, ev.x, ev.y);
+        ctx.font = "bold 11px sans-serif"; ctx.fillStyle = "white"; ctx.fillText(ev.type, ev.x, ev.y + 25);
     });
   }
 
-  // Lógica de interação mantida...
   function drawSingleArrow(fx, fy, tx, ty, color) {
     const head = 15; const angle = Math.atan2(ty - fy, tx - fx);
     ctx.strokeStyle = color; ctx.lineWidth = 4; ctx.lineCap = "round";
@@ -219,7 +225,6 @@
     draggingPlayer = null; arrowStart = null; arrowEnd = null; drawField();
   });
 
-  // Botões principais
   const bBtn = document.getElementById('blueBtn'), rBtn = document.getElementById('redBtn'), aBtn = document.getElementById('arrowBtn'), sBtn = document.getElementById('schemaBtn'), dBtn = document.getElementById('deadBallBtn');
   function updateButtonVisuals() {
     [bBtn, rBtn, aBtn, sBtn, dBtn].forEach(b => b.classList.remove('active'));
@@ -237,32 +242,31 @@
   window.prepareEvent = (type) => { pendingEvent = type; toggleRow('deadBallRow', false); };
   
   window.applyTactic = (tactic) => {
-    saveHistory();
-    const ts = new Date().toLocaleTimeString();
-    obsArea.value += `[${ts}] Tática ${tactic} aplicada.\n`;
-    // ... lógica de tática mantida ...
+    saveHistory(); players = players.filter(p => p.color !== currentTarget);
+    const formations = { '442': [ {x: 60, y: 250}, {x: 180, y: 80}, {x: 180, y: 190}, {x: 180, y: 310}, {x: 180, y: 420}, {x: 320, y: 80}, {x: 320, y: 190}, {x: 320, y: 310}, {x: 320, y: 420}, {x: 480, y: 180}, {x: 480, y: 320} ] };
+    const basePos = formations[tactic] || formations['442'];
+    basePos.forEach(pos => { let x = currentTarget === 'blue' ? pos.x : 800 - pos.x; players.push({ x: x, y: pos.y, color: currentTarget }); });
     drawField();
   };
 
   document.getElementById('undoBtn').onclick = () => { 
     if (history.length > 0) { 
         const last = history.pop(); 
-        players = last.players; arrows = last.arrows; events = last.events; 
-        obsArea.value = last.obs; passesBlue = last.pBlue; passesRed = last.pRed;
-        drawField(); 
+        players = last.players; arrows = last.arrows; events = last.events; obsArea.value = last.obs; passesBlue = last.pBlue; passesRed = last.pRed; drawField(); 
     } 
   };
   
   document.getElementById('clearBtn').onclick = () => { if(confirm("Limpar tudo?")) { saveHistory(); players = []; arrows = []; events = []; passesBlue = 0; passesRed = 0; obsArea.value = ""; drawField(); } };
   
-  // PDF E WHATSAPP
   document.getElementById('saveBtn').onclick = async () => {
     drawField();
     const doc = new jsPDF({ orientation: 'p', unit: 'mm', format: 'a4' });
+    const bN = document.getElementById('teamBlueName').value;
+    const rN = document.getElementById('teamRedName').value;
+    doc.text(`QUADRO TÁTICO: ${bN} VS ${rN}`, 105, 20, { align: "center" });
     const canvasImg = canvas.toDataURL("image/jpeg", 1.0);
     doc.addImage(canvasImg, 'JPEG', 15, 30, 180, 112);
-    doc.text(`PASSES - Azul: ${passesBlue} | Vermelho: ${passesRed}`, 15, 150);
-    doc.save(`Relatorio_Tatico.pdf`);
+    doc.save(`Tatica_${bN}_vs_${rN}.pdf`);
   };
 
   document.getElementById('shareBtn').onclick = async () => {
@@ -273,6 +277,7 @@
     });
   };
 
+  updateTeamLabels(); // Inicia com os nomes padrão
   drawField();
 </script>
 </body>
