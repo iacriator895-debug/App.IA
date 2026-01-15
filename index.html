@@ -3,92 +3,116 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>QUADRO TÁTICO – PRO SCOUT</title>
+  <title>QUADRO TÁTICO – PRO MENU</title>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
   <style>
-    html, body { margin: 0; padding: 0; height: 100%; background:#0b3d2e; font-family: sans-serif; overflow-x: hidden; }
-    body { display:flex; flex-direction: column; align-items:center; padding-top: 15px; padding-bottom: 20px; }
-    .project-title { color: white; font-size: 22px; font-weight: bold; margin-bottom: 15px; text-transform: uppercase; letter-spacing: 3px; border-bottom: 2px solid rgba(255,255,255,0.3); padding-bottom: 5px; }
-    
-    .header-section { display: flex; flex-direction: column; align-items: center; gap: 10px; margin-bottom: 15px; }
-    .teams-container { display: flex; gap: 20px; }
-    .team-box { display: flex; flex-direction: column; align-items: center; gap: 5px; }
-    .team-input { padding: 8px; border-radius: 4px; border: none; font-weight: bold; text-align: center; text-transform: uppercase; width: 130px; }
-    
-    .btn-pass { padding: 5px 10px; border-radius: 15px; border: none; color: white; cursor: pointer; font-size: 10px; font-weight: bold; text-transform: uppercase; transition: 0.2s; width: 100%; }
-    .btn-pass-blue { background: #2563eb; }
-    .btn-pass-red { background: #dc2626; }
+    html, body { margin: 0; padding: 0; height: 100%; background:#0b3d2e; font-family: sans-serif; overflow: hidden; }
+    body { display:flex; flex-direction: column; align-items:center; }
 
-    .controls { display: flex; gap: 6px; margin-bottom: 10px; flex-wrap: wrap; justify-content: center; max-width: 95vw; }
-    .secondary-row { display: none; gap: 6px; margin-bottom: 10px; animation: fadeIn 0.3s ease; flex-wrap: wrap; justify-content: center; background: rgba(0,0,0,0.3); padding: 12px; border-radius: 15px; border: 1px solid rgba(255,255,255,0.1); }
+    /* MENU LATERAL */
+    .sidebar {
+      position: fixed; left: -280px; top: 0; width: 280px; height: 100%;
+      background: #072b21; color: white; transition: 0.3s; z-index: 1000;
+      padding: 20px; box-sizing: border-box; overflow-y: auto;
+      box-shadow: 5px 0 15px rgba(0,0,0,0.5);
+    }
+    .sidebar.open { left: 0; }
+    .sidebar-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; border-bottom: 1px solid #10b981; padding-bottom: 10px; }
     
-    button { padding: 10px 14px; border-radius: 25px; border: 2px solid transparent; color: white; cursor: pointer; font-weight: bold; transition: 0.2s; font-size: 11px; text-transform: uppercase; }
-    #blueBtn { background: #2563eb; } #redBtn { background: #dc2626; } #arrowBtn { background: #ffffff; color: #000; }
-    #schemaBtn { background: #7c3aed; } #undoBtn { background: #f59e0b; } #clearBtn { background: #4b5563; } 
+    /* BOTÃO HAMBÚRGUER */
+    .menu-toggle { position: fixed; left: 15px; top: 15px; background: #10b981; color: white; border: none; padding: 10px; border-radius: 5px; cursor: pointer; z-index: 999; font-size: 20px; }
+
+    .project-title { color: white; font-size: 18px; font-weight: bold; margin-top: 15px; text-transform: uppercase; letter-spacing: 2px; }
+    
+    /* ORGANIZAÇÃO DOS INPUTS NO MENU */
+    .menu-section { margin-bottom: 25px; }
+    .menu-section-title { font-size: 12px; font-weight: bold; color: #10b981; margin-bottom: 10px; text-transform: uppercase; }
+    .team-box { display: flex; flex-direction: column; gap: 8px; margin-bottom: 15px; }
+    .team-input { padding: 10px; border-radius: 4px; border: none; font-weight: bold; text-align: center; width: 100%; box-sizing: border-box; }
+
+    /* BOTÕES TIPO LISTA NO MENU */
+    .menu-btn { width: 100%; padding: 12px; margin-bottom: 8px; border-radius: 8px; border: none; color: white; font-weight: bold; cursor: pointer; text-align: left; text-transform: uppercase; font-size: 11px; }
+    .btn-schema { background: #7c3aed; }
+    .btn-ball { background: #06b6d4; }
+    .btn-clear { background: #be123c; }
+
+    /* CONTROLES RÁPIDOS (TOPO) */
+    .quick-controls { display: flex; gap: 6px; margin: 15px 0; flex-wrap: wrap; justify-content: center; width: 95vw; }
+    .btn-quick { padding: 10px 14px; border-radius: 25px; border: 2px solid transparent; color: white; font-weight: bold; font-size: 10px; text-transform: uppercase; }
+    #blueBtn { background: #2563eb; } #redBtn { background: #dc2626; } 
+    #passBlue { background: #2563eb; border-style: dashed; } #passRed { background: #dc2626; border-style: dashed; }
+    #arrowBtn { background: #ffffff; color: #000; } #undoBtn { background: #f59e0b; }
     #saveBtn { background: #000; } #shareBtn { background: #22c55e; }
-    #deadBallBtn { background: #06b6d4; }
 
-    .btn-tactic, .btn-event { background: #10b981; font-size: 10px; padding: 8px 12px; min-width: 60px; }
-    .obs-container { width: 95vw; max-width: 600px; margin-top: 15px; display: flex; flex-direction: column; }
-    .obs-label { color: white; font-weight: bold; font-size: 12px; margin-bottom: 5px; text-transform: uppercase; }
-    #obsArea { width: 100%; height: 100px; padding: 10px; border-radius: 8px; border: 2px solid #fff; background: rgba(255,255,255,0.1); color: white; resize: none; font-family: Arial, sans-serif; font-size: 12px; box-sizing: border-box; }
-    @keyframes fadeIn { from { opacity: 0; transform: translateY(-5px); } to { opacity: 1; transform: translateY(0); } }
+    /* SUB-MENUS INTERNOS */
+    .sub-menu { display: none; flex-wrap: wrap; gap: 5px; background: rgba(255,255,255,0.1); padding: 10px; border-radius: 8px; margin-bottom: 10px; }
+    
     canvas { width: 95vw; max-width: 600px; aspect-ratio: 8 / 5; background:#1f7a3f; border:4px solid #fff; border-radius:12px; touch-action: none; }
+    .obs-container { width: 95vw; max-width: 600px; margin-top: 10px; }
+    #obsArea { width: 100%; height: 80px; padding: 10px; border-radius: 8px; border: 2px solid #fff; background: rgba(255,255,255,0.1); color: white; resize: none; font-family: Arial, sans-serif; font-size: 12px; box-sizing: border-box; }
     button.active { border-color: #fbbf24; transform: scale(1.05); }
   </style>
 </head>
 <body>
 
-<div class="project-title">QUADRO TÁTICO</div>
+<button class="menu-toggle" onclick="toggleSidebar()">☰</button>
 
-<div class="header-section">
-    <div class="teams-container">
+<div id="sidebar" class="sidebar">
+    <div class="sidebar-header">
+        <span>CONFIGURAÇÕES</span>
+        <button onclick="toggleSidebar()" style="background:none; border:none; color:white; font-size:20px;">✕</button>
+    </div>
+
+    <div class="menu-section">
+        <div class="menu-section-title">Times</div>
         <div class="team-box">
             <input type="text" id="teamBlueName" class="team-input" value="TIME AZUL" oninput="updateTeamLabels()">
-            <button id="labelPassBlue" class="btn-pass btn-pass-blue" onclick="addPass('blue')">+ PASSE AZUL</button>
-        </div>
-        <div class="team-box">
             <input type="text" id="teamRedName" class="team-input" value="TIME VERMELHO" oninput="updateTeamLabels()">
-            <button id="labelPassRed" class="btn-pass btn-pass-red" onclick="addPass('red')">+ PASSE VERMELHO</button>
         </div>
+    </div>
+
+    <div class="menu-section">
+        <div class="menu-section-title">Estratégia</div>
+        <button class="menu-btn btn-schema" onclick="toggleSub('schemaSub')">Esquemas Táticos</button>
+        <div id="schemaSub" class="sub-menu">
+            <button onclick="applyTactic('442')" style="background:#10b981">442</button>
+            <button onclick="applyTactic('433')" style="background:#10b981">433</button>
+            <button onclick="applyTactic('352')" style="background:#10b981">352</button>
+        </div>
+
+        <button class="menu-btn btn-ball" onclick="toggleSub('ballSub')">Bola Parada</button>
+        <div id="ballSub" class="sub-menu">
+            <button onclick="prepareEvent('Falta')" style="background:#06b6d4">Falta</button>
+            <button onclick="prepareEvent('Escanteio')" style="background:#06b6d4">Escanteio</button>
+            <button onclick="prepareEvent('Meta')" style="background:#06b6d4">Meta</button>
+            <button onclick="prepareEvent('Amarelo')" style="background:#eab308">Amarelo</button>
+            <button onclick="prepareEvent('Vermelho')" style="background:#be123c">Vermelho</button>
+        </div>
+    </div>
+
+    <div class="menu-section">
+        <div class="menu-section-title">Sistema</div>
+        <button class="menu-btn btn-clear" onclick="clearField()">Limpar Campo</button>
     </div>
 </div>
 
-<div class="controls">
-    <button id="blueBtn">JOGADOR AZUL</button>
-    <button id="redBtn">JOGADOR VERMELHO</button>
-    <button id="arrowBtn">Seta</button>
-    <button id="schemaBtn">Esquemas</button>
-    <button id="deadBallBtn">Bola Parada</button>
-    <button id="undoBtn">Desfazer</button>
-    <button id="clearBtn">Limpar</button>
-    <button id="saveBtn">PDF</button>
-    <button id="shareBtn">WhatsApp</button>
-</div>
+<div class="project-title">QUADRO TÁTICO</div>
 
-<div id="schemaRow" class="secondary-row">
-    <button class="btn-tactic" onclick="applyTactic('442')">4-4-2</button>
-    <button class="btn-tactic" onclick="applyTactic('433')">4-3-3</button>
-    <button class="btn-tactic" onclick="applyTactic('352')">3-5-2</button>
-    <button class="btn-tactic" onclick="applyTactic('541')">5-4-1</button>
-    <button class="btn-tactic" style="background:#333" onclick="toggleRow('schemaRow', false)">Fechar</button>
-</div>
-
-<div id="deadBallRow" class="secondary-row">
-    <button class="btn-event" onclick="prepareEvent('Falta')">Falta ✝️</button>
-    <button class="btn-event" onclick="prepareEvent('Escanteio')">Escanteio</button>
-    <button class="btn-event" onclick="prepareEvent('Meta')">T. Meta ⚽</button>
-    <button class="btn-event" onclick="prepareEvent('Penalti')">Pênalti</button>
-    <button class="btn-event" style="background:#eab308" onclick="prepareEvent('Amarelo')">Amarelo</button>
-    <button class="btn-event" style="background:#be123c" onclick="prepareEvent('Vermelho')">Vermelho</button>
-    <button class="btn-event" style="background:#333" onclick="toggleRow('deadBallRow', false)">Fechar</button>
+<div class="quick-controls">
+    <button id="blueBtn" class="btn-quick" onclick="setMode('blue')">AZUL</button>
+    <button id="passBlue" class="btn-quick" onclick="addPass('blue')">+ PASSE</button>
+    <button id="redBtn" class="btn-quick" onclick="setMode('red')">VERMELHO</button>
+    <button id="passRed" class="btn-quick" onclick="addPass('red')">+ PASSE</button>
+    <button id="arrowBtn" class="btn-quick" onclick="setMode('arrow')">Seta</button>
+    <button id="undoBtn" class="btn-quick" onclick="undo()">Desfazer</button>
+    <button id="saveBtn" class="btn-quick" onclick="savePDF()">PDF</button>
+    <button id="shareBtn" class="btn-quick" onclick="shareWhatsApp()">Zap</button>
 </div>
 
 <canvas id="field" width="800" height="500"></canvas>
 
 <div class="obs-container">
-    <label class="obs-label">Observações Táticas:</label>
-    <textarea id="obsArea" placeholder="Digite aqui suas anotações..."></textarea>
+    <textarea id="obsArea" placeholder="Observações..."></textarea>
 </div>
 
 <script>
@@ -101,30 +125,29 @@
   let draggingPlayer = null, arrowStart = null, arrowEnd = null, currentTarget = 'blue', pendingEvent = null;
   let passesBlue = 0, passesRed = 0;
 
+  function toggleSidebar() { document.getElementById('sidebar').classList.toggle('open'); }
+  function toggleSub(id) { 
+      const el = document.getElementById(id);
+      el.style.display = (el.style.display === 'flex') ? 'none' : 'flex';
+  }
+
   function updateTeamLabels() {
-    const blueName = document.getElementById('teamBlueName').value.toUpperCase();
-    const redName = document.getElementById('teamRedName').value.toUpperCase();
-    document.getElementById('blueBtn').innerText = `JOGADOR ${blueName}`;
-    document.getElementById('redBtn').innerText = `JOGADOR ${redName}`;
-    document.getElementById('labelPassBlue').innerText = `+ PASSE ${blueName}`;
-    document.getElementById('labelPassRed').innerText = `+ PASSE ${redName}`;
+    const bN = document.getElementById('teamBlueName').value.toUpperCase();
+    const rN = document.getElementById('teamRedName').value.toUpperCase();
+    document.getElementById('blueBtn').innerText = bN;
+    document.getElementById('redBtn').innerText = rN;
     drawField();
   }
 
   function saveHistory() {
-    history.push({ 
-        players: JSON.parse(JSON.stringify(players)), arrows: JSON.parse(JSON.stringify(arrows)), 
-        events: JSON.parse(JSON.stringify(events)), obs: obsArea.value, pBlue: passesBlue, pRed: passesRed
-    });
+    history.push({ players: JSON.parse(JSON.stringify(players)), arrows: JSON.parse(JSON.stringify(arrows)), events: JSON.parse(JSON.stringify(events)), obs: obsArea.value, pBlue: passesBlue, pRed: passesRed });
     if (history.length > 30) history.shift();
   }
 
   function addPass(team) {
     saveHistory();
-    const blueName = document.getElementById('teamBlueName').value;
-    const redName = document.getElementById('teamRedName').value;
     if(team === 'blue') passesBlue++; else passesRed++;
-    obsArea.value += `[${new Date().toLocaleTimeString()}] PASSE ${team === 'blue' ? blueName : redName} registrado.\n`;
+    obsArea.value += `[${new Date().toLocaleTimeString()}] PASSE ${team.toUpperCase()} registrado.\n`;
     drawField();
   }
 
@@ -135,14 +158,12 @@
     ctx.beginPath(); ctx.moveTo(400, 20); ctx.lineTo(400, 480); ctx.stroke();
     ctx.beginPath(); ctx.arc(400, 250, 60, 0, Math.PI * 2); ctx.stroke();
     ctx.beginPath(); ctx.arc(400, 250, 4, 0, Math.PI * 2); ctx.fillStyle = 'white'; ctx.fill();
-    ctx.strokeRect(20, 100, 120, 300); ctx.strokeRect(20, 180, 50, 140); 
-    ctx.strokeRect(660, 100, 120, 300); ctx.strokeRect(730, 180, 50, 140); 
+    ctx.strokeRect(20, 100, 120, 300); ctx.strokeRect(660, 100, 120, 300);
     
-    const bN = document.getElementById('teamBlueName').value.substring(0, 10);
-    const rN = document.getElementById('teamRedName').value.substring(0, 10);
-    ctx.fillStyle = 'rgba(0,0,0,0.5)'; ctx.roundRect(250, 30, 300, 40, 10); ctx.fill();
+    // Placar
+    ctx.fillStyle = 'rgba(0,0,0,0.5)'; ctx.roundRect(280, 30, 240, 40, 10); ctx.fill();
     ctx.font = "bold 14px sans-serif"; ctx.fillStyle = "white"; ctx.textAlign = "center";
-    ctx.fillText(`${bN}: ${passesBlue}   VS   ${rN}: ${passesRed}`, 400, 55);
+    ctx.fillText(`${passesBlue} - PASSES - ${passesRed}`, 400, 55);
 
     drawArrows(); drawEvents(); drawPlayers();
     if (mode === 'arrow' && arrowStart && arrowEnd) drawSingleArrow(arrowStart.x, arrowStart.y, arrowEnd.x, arrowEnd.y, "rgba(255,255,255,0.5)");
@@ -150,28 +171,17 @@
 
   function drawEvents() {
     events.forEach(ev => {
-        ctx.textAlign = "center"; ctx.textBaseline = "middle";
         let icon = "";
         if (ev.type === "Falta") icon = "✝️";
         else if (ev.type === "Meta") icon = "⚽";
         else if (ev.type === "Escanteio") icon = "◿";
-        else if (ev.type === "Penalti") icon = "⦿";
         else if (ev.type === "Amarelo") icon = "🟨";
         else if (ev.type === "Vermelho") icon = "🟥";
-        ctx.font = `30px sans-serif`; ctx.fillText(icon, ev.x, ev.y);
+        ctx.font = `30px sans-serif`; ctx.textAlign = "center"; ctx.fillText(icon, ev.x, ev.y);
         ctx.font = "bold 11px sans-serif"; ctx.fillStyle = "white"; ctx.fillText(ev.type, ev.x, ev.y + 25);
     });
   }
 
-  function drawSingleArrow(fx, fy, tx, ty, color) {
-    const head = 15; const angle = Math.atan2(ty - fy, tx - fx);
-    ctx.strokeStyle = color; ctx.lineWidth = 4; ctx.lineCap = "round";
-    ctx.beginPath(); ctx.moveTo(fx, fy); ctx.lineTo(tx, ty);
-    ctx.lineTo(tx - head * Math.cos(angle - Math.PI / 6), ty - head * Math.sin(angle - Math.PI / 6));
-    ctx.moveTo(tx, ty); ctx.lineTo(tx - head * Math.cos(angle + Math.PI / 6), ty - head * Math.sin(angle + Math.PI / 6));
-    ctx.stroke();
-  }
-  function drawArrows() { arrows.forEach(a => drawSingleArrow(a.x1, a.y1, a.x2, a.y2, "white")); }
   function drawPlayers() {
     players.forEach(p => {
       ctx.beginPath(); ctx.arc(p.x, p.y, 18, 0, Math.PI * 2);
@@ -179,6 +189,15 @@
       ctx.strokeStyle = 'white'; ctx.lineWidth = 3; ctx.stroke();
     });
   }
+
+  function drawSingleArrow(fx, fy, tx, ty, color) {
+    const head = 15; const angle = Math.atan2(ty - fy, tx - fx);
+    ctx.strokeStyle = color; ctx.lineWidth = 4; ctx.beginPath(); ctx.moveTo(fx, fy); ctx.lineTo(tx, ty);
+    ctx.lineTo(tx - head * Math.cos(angle - Math.PI / 6), ty - head * Math.sin(angle - Math.PI / 6));
+    ctx.moveTo(tx, ty); ctx.lineTo(tx - head * Math.cos(angle + Math.PI / 6), ty - head * Math.sin(angle + Math.PI / 6)); ctx.stroke();
+  }
+  function drawArrows() { arrows.forEach(a => drawSingleArrow(a.x1, a.y1, a.x2, a.y2, "white")); }
+
   function getPos(e) {
     const rect = canvas.getBoundingClientRect();
     return { x: (e.clientX - rect.left) * (800 / rect.width), y: (e.clientY - rect.top) * (500 / rect.height) };
@@ -187,14 +206,12 @@
   canvas.addEventListener('pointerdown', e => {
     const pos = getPos(e);
     if (pendingEvent) {
-        saveHistory();
-        events.push({ x: pos.x, y: pos.y, type: pendingEvent });
-        obsArea.value += `[${new Date().toLocaleTimeString()}] ${pendingEvent.toUpperCase()} marcada.\n`;
-        pendingEvent = null; mode = null; updateButtonVisuals(); drawField(); return;
+        saveHistory(); events.push({ x: pos.x, y: pos.y, type: pendingEvent });
+        pendingEvent = null; drawField(); return;
     }
     const target = players.find(p => Math.hypot(p.x - pos.x, p.y - pos.y) <= 22);
     if (target) { saveHistory(); draggingPlayer = target; }
-    else if (mode === 'blue' || mode === 'red') { saveHistory(); players.push({ x: pos.x, y: pos.y, color: mode }); mode = null; updateButtonVisuals(); }
+    else if (mode === 'blue' || mode === 'red') { saveHistory(); players.push({ x: pos.x, y: pos.y, color: mode }); mode = null; updateVisuals(); }
     else if (mode === 'arrow') { saveHistory(); arrowStart = pos; }
     canvas.setPointerCapture(e.pointerId); drawField();
   });
@@ -209,62 +226,34 @@
   canvas.addEventListener('pointerup', () => {
     if (mode === 'arrow' && arrowStart && arrowEnd) {
       if (Math.hypot(arrowStart.x - arrowEnd.x, arrowStart.y - arrowEnd.y) > 15) arrows.push({ x1: arrowStart.x, y1: arrowStart.y, x2: arrowEnd.x, y2: arrowEnd.y });
-      mode = null; updateButtonVisuals();
+      mode = null; updateVisuals();
     }
     draggingPlayer = null; arrowStart = null; arrowEnd = null; drawField();
   });
 
-  const bBtn = document.getElementById('blueBtn'), rBtn = document.getElementById('redBtn'), aBtn = document.getElementById('arrowBtn'), sBtn = document.getElementById('schemaBtn'), dBtn = document.getElementById('deadBallBtn');
-  function updateButtonVisuals() {
-    [bBtn, rBtn, aBtn, sBtn, dBtn].forEach(b => b.classList.remove('active'));
-    if (mode === 'blue') bBtn.classList.add('active'); if (mode === 'red') rBtn.classList.add('active'); if (mode === 'arrow') aBtn.classList.add('active');
-    if (mode === 'schema') sBtn.classList.add('active'); if (mode === 'deadBall') dBtn.classList.add('active');
+  function setMode(m) { mode = m; updateVisuals(); }
+  function updateVisuals() {
+    ['blueBtn','redBtn','arrowBtn'].forEach(id => document.getElementById(id).classList.remove('active'));
+    if(mode === 'blue') document.getElementById('blueBtn').classList.add('active');
+    if(mode === 'red') document.getElementById('redBtn').classList.add('active');
+    if(mode === 'arrow') document.getElementById('arrowBtn').classList.add('active');
   }
 
-  bBtn.onclick = () => { mode = 'blue'; toggleRow('schemaRow', false); toggleRow('deadBallRow', false); updateButtonVisuals(); };
-  rBtn.onclick = () => { mode = 'red'; toggleRow('schemaRow', false); toggleRow('deadBallRow', false); updateButtonVisuals(); };
-  aBtn.onclick = () => { mode = 'arrow'; toggleRow('schemaRow', false); toggleRow('deadBallRow', false); updateButtonVisuals(); };
-  sBtn.onclick = () => { toggleRow('schemaRow', true); toggleRow('deadBallRow', false); mode = 'schema'; updateButtonVisuals(); };
-  dBtn.onclick = () => { toggleRow('deadBallRow', true); toggleRow('schemaRow', false); mode = 'deadBall'; updateButtonVisuals(); };
+  function prepareEvent(t) { pendingEvent = t; toggleSidebar(); }
+  function applyTactic(t) {
+      saveHistory();
+      const pos = { '442': [{x:100,y:250},{x:200,y:100},{x:200,y:200},{x:200,y:300},{x:200,y:400}] }; // Simplificado
+      (pos[t] || pos['442']).forEach(p => players.push({x:p.x, y:p.y, color:'blue'}));
+      drawField(); toggleSidebar();
+  }
 
-  function toggleRow(id, show) { document.getElementById(id).style.display = show ? 'flex' : 'none'; }
-  window.prepareEvent = (type) => { pendingEvent = type; toggleRow('deadBallRow', false); };
-  
-  window.applyTactic = (tactic) => {
-    saveHistory(); players = players.filter(p => p.color !== currentTarget);
-    const formations = { '442': [ {x: 60, y: 250}, {x: 180, y: 80}, {x: 180, y: 190}, {x: 180, y: 310}, {x: 180, y: 420}, {x: 320, y: 80}, {x: 320, y: 190}, {x: 320, y: 310}, {x: 320, y: 420}, {x: 480, y: 180}, {x: 480, y: 320} ] };
-    const basePos = formations[tactic] || formations['442'];
-    basePos.forEach(pos => { let x = currentTarget === 'blue' ? pos.x : 800 - pos.x; players.push({ x: x, y: pos.y, color: currentTarget }); });
-    drawField();
-  };
+  function undo() { if(history.length > 0){ const l = history.pop(); players=l.players; arrows=l.arrows; events=l.events; obsArea.value=l.obs; passesBlue=l.pBlue; passesRed=l.pRed; drawField(); } }
+  function clearField() { if(confirm("Limpar?")){ saveHistory(); players=[]; arrows=[]; events=[]; passesBlue=0; passesRed=0; obsArea.value=""; drawField(); toggleSidebar(); } }
 
-  document.getElementById('undoBtn').onclick = () => { 
-    if (history.length > 0) { 
-        const last = history.pop(); 
-        players = last.players; arrows = last.arrows; events = last.events; obsArea.value = last.obs; passesBlue = last.pBlue; passesRed = last.pRed; drawField(); 
-    } 
-  };
-  
-  document.getElementById('clearBtn').onclick = () => { if(confirm("Limpar tudo?")) { saveHistory(); players = []; arrows = []; events = []; passesBlue = 0; passesRed = 0; obsArea.value = ""; drawField(); } };
-  
-  document.getElementById('saveBtn').onclick = async () => {
-    drawField();
-    const doc = new jsPDF({ orientation: 'p', unit: 'mm', format: 'a4' });
-    const canvasImg = canvas.toDataURL("image/jpeg", 1.0);
-    doc.addImage(canvasImg, 'JPEG', 15, 30, 180, 112);
-    doc.save(`Tatica.pdf`);
-  };
-
-  document.getElementById('shareBtn').onclick = async () => {
-    drawField();
-    canvas.toBlob(async (blob) => {
-      const file = new File([blob], 'tatica.png', { type: 'image/png' });
-      if (navigator.share) await navigator.share({ files: [file], title: `Tática Scout` });
-    });
-  };
+  async function savePDF() { drawField(); const doc = new jsPDF(); doc.addImage(canvas.toDataURL("image/jpeg"), 'JPEG', 10, 10, 190, 120); doc.save('tatica.pdf'); }
+  async function shareWhatsApp() { drawField(); canvas.toBlob(b => { if(navigator.share) navigator.share({files:[new File([b],'t.png',{type:'image/png'})]}); }); }
 
   updateTeamLabels();
-  drawField();
 </script>
 </body>
 </html>
