@@ -3,11 +3,15 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>RESET – Tático PDF Corrigido</title>
+  <title>QUADRO TÁTICO</title>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
   <style>
     html, body { margin: 0; padding: 0; height: 100%; background:#0b3d2e; font-family: sans-serif; overflow-x: hidden; }
     body { display:flex; flex-direction: column; align-items:center; padding-top: 15px; padding-bottom: 20px; }
+    
+    /* Estilo do Nome Atualizado */
+    .project-title { color: white; font-size: 22px; font-weight: bold; margin-bottom: 15px; text-transform: uppercase; letter-spacing: 3px; border-bottom: 2px solid rgba(255,255,255,0.3); padding-bottom: 5px; }
+
     .header-inputs { display: flex; gap: 10px; margin-bottom: 10px; }
     .team-input { padding: 8px; border-radius: 4px; border: none; font-weight: bold; text-align: center; text-transform: uppercase; width: 130px; }
     .controls { display: flex; gap: 6px; margin-bottom: 10px; flex-wrap: wrap; justify-content: center; max-width: 95vw; }
@@ -28,6 +32,8 @@
   </style>
 </head>
 <body>
+
+<div class="project-title">QUADRO TÁTICO</div>
 
 <div class="header-inputs">
     <input type="text" id="teamBlueName" class="team-input" value="TIME AZUL">
@@ -81,10 +87,8 @@
   }
 
   function drawField() {
-    // CORREÇÃO: Preencher o fundo explicitamente para o PDF reconhecer
     ctx.fillStyle = '#1f7a3f';
     ctx.fillRect(0, 0, canvas.width, canvas.height);
-
     ctx.strokeStyle = 'white'; ctx.lineWidth = 3;
     ctx.strokeRect(20, 20, 760, 460);
     ctx.beginPath(); ctx.moveTo(400, 20); ctx.lineTo(400, 480); ctx.stroke();
@@ -181,30 +185,22 @@
   document.getElementById('clearBtn').onclick = () => { if(confirm("Limpar campo e anotações?")) { saveHistory(); players = []; arrows = []; obsArea.value = ""; drawField(); } };
 
   document.getElementById('saveBtn').onclick = async () => {
-    // Redesenha para garantir que o fundo está lá
     drawField();
-
     const data = { players, arrows, obs: obsArea.value, bName: document.getElementById('teamBlueName').value, rName: document.getElementById('teamRedName').value };
     const doc = new jsPDF({ orientation: 'p', unit: 'mm', format: 'a4' });
     const blueT = data.bName.toUpperCase();
     const redT = data.rName.toUpperCase();
-
     doc.setFont("helvetica", "bold");
     doc.setFontSize(16);
     doc.text(`QUADRO TÁTICO: ${blueT} vs ${redT}`, 105, 20, { align: "center" });
-
-    // Captura com compressão para evitar bugs de memória no mobile
     const canvasImg = canvas.toDataURL("image/jpeg", 1.0);
     doc.addImage(canvasImg, 'JPEG', 15, 30, 180, 112);
-
     doc.setFontSize(14);
     doc.text("OBSERVAÇÕES TÁTICAS:", 15, 155);
-    
     doc.setFont("helvetica", "normal");
     doc.setFontSize(11);
     const splitObs = doc.splitTextToSize(obsArea.value, 180);
     doc.text(splitObs, 15, 165);
-
     doc.save(`Tatica_${blueT}_vs_${redT}.pdf`);
   };
 
