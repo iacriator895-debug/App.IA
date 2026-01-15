@@ -3,36 +3,28 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>RESET – Tático Profissional</title>
+  <title>RESET – Tático com Esquemas</title>
   <style>
     html, body { margin: 0; padding: 0; height: 100%; background:#0b3d2e; font-family: sans-serif; overflow: hidden; }
     body { display:flex; flex-direction: column; align-items:center; padding-top: 15px; }
-
     .header-inputs { display: flex; gap: 10px; margin-bottom: 10px; }
-    .team-input { 
-        padding: 8px; border-radius: 4px; border: none; font-weight: bold; 
-        text-align: center; text-transform: uppercase; width: 130px;
-    }
-
-    .controls { display: flex; gap: 8px; margin-bottom: 10px; flex-wrap: wrap; justify-content: center; }
-    button { 
-        padding: 10px 15px; border-radius: 25px; border: 2px solid transparent; color: white; 
-        cursor: pointer; font-weight: bold; transition: 0.2s; font-size: 12px;
-    }
+    .team-input { padding: 8px; border-radius: 4px; border: none; font-weight: bold; text-align: center; text-transform: uppercase; width: 130px; }
+    
+    .controls { display: flex; gap: 6px; margin-bottom: 10px; flex-wrap: wrap; justify-content: center; max-width: 95vw; }
+    button { padding: 10px 14px; border-radius: 25px; border: 2px solid transparent; color: white; cursor: pointer; font-weight: bold; transition: 0.2s; font-size: 11px; text-transform: uppercase; }
+    
     #blueBtn { background: #2563eb; }
     #redBtn { background: #dc2626; }
     #arrowBtn { background: #ffffff; color: #000; }
-    #undoBtn { background: #f59e0b; } /* Amarelo para Desfazer */
+    #undoBtn { background: #f59e0b; } 
     #clearBtn { background: #4b5563; }
     #saveBtn { background: #000; }
     
-    button.active { border-color: #fbbf24; transform: scale(1.05); box-shadow: 0 0 12px rgba(255,255,255,0.4); }
+    /* Novo Botão de Esquemas */
+    #schemaBtn { background: #7c3aed; } 
 
-    canvas {
-      width: 95vw; max-width: 600px; aspect-ratio: 8 / 5;
-      background:#1f7a3f; border:4px solid #fff; border-radius:12px;
-      touch-action: none;
-    }
+    button.active { border-color: #fbbf24; transform: scale(1.05); box-shadow: 0 0 12px rgba(255,255,255,0.4); }
+    canvas { width: 95vw; max-width: 600px; aspect-ratio: 8 / 5; background:#1f7a3f; border:4px solid #fff; border-radius:12px; touch-action: none; }
   </style>
 </head>
 <body>
@@ -46,8 +38,8 @@
     <button id="blueBtn">Jogador Azul</button>
     <button id="redBtn">Jogador Vermelho</button>
     <button id="arrowBtn">Seta</button>
-    <button id="undoBtn">Desfazer</button>
-    <button id="clearBtn">Limpar Tudo</button>
+    <button id="schemaBtn">Esquemas</button> <button id="undoBtn">Desfazer</button>
+    <button id="clearBtn">Limpar</button>
     <button id="saveBtn">Salvar</button>
 </div>
 
@@ -56,51 +48,33 @@
 <script>
   const canvas = document.getElementById('field');
   const ctx = canvas.getContext('2d');
+  let mode = null, players = [], arrows = [], history = [];
+  let draggingPlayer = null, arrowStart = null, arrowEnd = null;
 
-  let mode = null; 
-  let players = [];
-  let arrows = [];
-  let history = []; // Armazena os estados anteriores
-  
-  let draggingPlayer = null;
-  let arrowStart = null;
-  let arrowEnd = null;
-
-  // Salva o estado atual no histórico antes de qualquer mudança
   function saveHistory() {
-    const state = {
-      players: JSON.parse(JSON.stringify(players)),
-      arrows: JSON.parse(JSON.stringify(arrows))
-    };
-    history.push(state);
-    if (history.length > 20) history.shift(); // Limite de 20 "desfazeres"
+    history.push({ players: JSON.parse(JSON.stringify(players)), arrows: JSON.parse(JSON.stringify(arrows)) });
+    if (history.length > 30) history.shift();
   }
 
   function drawField() {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     ctx.strokeStyle = 'rgba(255,255,255,0.8)';
     ctx.lineWidth = 3;
-
-    // Desenho do Campo
     ctx.strokeRect(20, 20, 760, 460);
     ctx.beginPath(); ctx.moveTo(400, 20); ctx.lineTo(400, 480); ctx.stroke();
     ctx.beginPath(); ctx.arc(400, 250, 60, 0, Math.PI * 2); ctx.stroke();
     ctx.beginPath(); ctx.arc(400, 250, 4, 0, Math.PI * 2); ctx.fillStyle = 'white'; ctx.fill();
     ctx.strokeRect(20, 100, 120, 300); ctx.strokeRect(20, 180, 50, 140); 
     ctx.strokeRect(660, 100, 120, 300); ctx.strokeRect(730, 180, 50, 140); 
-
-    drawArrows();
-    drawPlayers();
-    
-    if (mode === 'arrow' && arrowStart && arrowEnd) {
-      drawSingleArrow(arrowStart.x, arrowStart.y, arrowEnd.x, arrowEnd.y, "rgba(255,255,255,0.5)");
-    }
+    ctx.beginPath(); ctx.arc(110, 250, 3, 0, Math.PI * 2); ctx.fill();
+    ctx.beginPath(); ctx.arc(690, 250, 3, 0, Math.PI * 2); ctx.fill();
+    drawArrows(); drawPlayers();
+    if (mode === 'arrow' && arrowStart && arrowEnd) drawSingleArrow(arrowStart.x, arrowStart.y, arrowEnd.x, arrowEnd.y, "rgba(255,255,255,0.5)");
   }
 
   function drawSingleArrow(fx, fy, tx, ty, color) {
-    const head = 15;
-    const angle = Math.atan2(ty - fy, tx - fx);
-    ctx.strokeStyle = color; ctx.lineWidth = 4;
+    const head = 15; const angle = Math.atan2(ty - fy, tx - fx);
+    ctx.strokeStyle = color; ctx.lineWidth = 4; ctx.lineCap = "round";
     ctx.beginPath(); ctx.moveTo(fx, fy); ctx.lineTo(tx, ty);
     ctx.lineTo(tx - head * Math.cos(angle - Math.PI / 6), ty - head * Math.sin(angle - Math.PI / 6));
     ctx.moveTo(tx, ty);
@@ -125,20 +99,10 @@
   canvas.addEventListener('pointerdown', e => {
     const pos = getPos(e);
     const target = players.find(p => Math.hypot(p.x - pos.x, p.y - pos.y) <= 22);
-
-    if (target) {
-        saveHistory(); // Salva antes de começar a mover
-        draggingPlayer = target;
-    } else if (mode === 'blue' || mode === 'red') {
-        saveHistory(); // Salva antes de adicionar
-        players.push({ x: pos.x, y: pos.y, color: mode });
-        mode = null; updateButtonVisuals();
-    } else if (mode === 'arrow') {
-        saveHistory(); // Salva antes de iniciar a seta
-        arrowStart = pos;
-    }
-    canvas.setPointerCapture(e.pointerId);
-    drawField();
+    if (target) { saveHistory(); draggingPlayer = target; }
+    else if (mode === 'blue' || mode === 'red') { saveHistory(); players.push({ x: pos.x, y: pos.y, color: mode }); mode = null; updateButtonVisuals(); }
+    else if (mode === 'arrow') { saveHistory(); arrowStart = pos; }
+    canvas.setPointerCapture(e.pointerId); drawField();
   });
 
   canvas.addEventListener('pointermove', e => {
@@ -150,53 +114,43 @@
 
   canvas.addEventListener('pointerup', () => {
     if (mode === 'arrow' && arrowStart && arrowEnd) {
-      if (Math.hypot(arrowStart.x - arrowEnd.x, arrowStart.y - arrowEnd.y) > 15) {
-        arrows.push({ x1: arrowStart.x, y1: arrowStart.y, x2: arrowEnd.x, y2: arrowEnd.y });
-      }
+      if (Math.hypot(arrowStart.x - arrowEnd.x, arrowStart.y - arrowEnd.y) > 15) arrows.push({ x1: arrowStart.x, y1: arrowStart.y, x2: arrowEnd.x, y2: arrowEnd.y });
       mode = null; updateButtonVisuals();
     }
-    draggingPlayer = null; arrowStart = null; arrowEnd = null;
-    drawField();
+    draggingPlayer = null; arrowStart = null; arrowEnd = null; drawField();
   });
 
-  // Funções dos Botões
-  const bBtn = document.getElementById('blueBtn');
-  const rBtn = document.getElementById('redBtn');
-  const aBtn = document.getElementById('arrowBtn');
+  const bBtn = document.getElementById('blueBtn'), 
+        rBtn = document.getElementById('redBtn'), 
+        aBtn = document.getElementById('arrowBtn'),
+        sBtn = document.getElementById('schemaBtn');
 
   function updateButtonVisuals() {
-    [bBtn, rBtn, aBtn].forEach(b => b.classList.remove('active'));
-    if (mode === 'blue') bBtn.classList.add('active');
-    if (mode === 'red') rBtn.classList.add('active');
+    [bBtn, rBtn, aBtn, sBtn].forEach(b => b.classList.remove('active'));
+    if (mode === 'blue') bBtn.classList.add('active'); 
+    if (mode === 'red') rBtn.classList.add('active'); 
     if (mode === 'arrow') aBtn.classList.add('active');
+    if (mode === 'schema') sBtn.classList.add('active');
   }
 
   bBtn.onclick = () => { mode = 'blue'; updateButtonVisuals(); };
   rBtn.onclick = () => { mode = 'red'; updateButtonVisuals(); };
   aBtn.onclick = () => { mode = 'arrow'; updateButtonVisuals(); };
 
-  // LÓGICA DO DESFAZER
-  document.getElementById('undoBtn').onclick = () => {
-    if (history.length > 0) {
-      const lastState = history.pop();
-      players = lastState.players;
-      arrows = lastState.arrows;
-      drawField();
-    }
+  // AÇÃO DO BOTÃO ESQUEMAS (Por enquanto apenas ativa o modo visual)
+  sBtn.onclick = () => {
+    mode = 'schema';
+    updateButtonVisuals();
+    alert("Pronto! Agora podemos definir as opções de formação.");
   };
 
-  document.getElementById('clearBtn').onclick = () => {
-    if(confirm("Limpar tudo?")) {
-        saveHistory();
-        players = []; arrows = []; mode = null;
-        updateButtonVisuals(); drawField();
-    }
-  };
+  document.getElementById('undoBtn').onclick = () => { if (history.length > 0) { const last = history.pop(); players = last.players; arrows = last.arrows; drawField(); } };
+  document.getElementById('clearBtn').onclick = () => { if(confirm("Limpar campo?")) { saveHistory(); players = []; arrows = []; mode = null; updateButtonVisuals(); drawField(); } };
 
   document.getElementById('saveBtn').onclick = () => {
     const data = { players, arrows, bName: document.getElementById('teamBlueName').value, rName: document.getElementById('teamRedName').value };
-    localStorage.setItem('futebol_tatico_undo', JSON.stringify(data));
-    alert('Salvo!');
+    localStorage.setItem('futebol_tatico_save', JSON.stringify(data));
+    alert('Tática Salva!');
   };
 
   drawField();
