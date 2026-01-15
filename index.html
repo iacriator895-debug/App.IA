@@ -72,10 +72,12 @@
 </div>
 
 <div id="deadBallRow" class="secondary-row">
-    <button id="eventFalta" class="btn-event" onclick="prepareEvent('Falta')">Falta ✝️</button>
-    <button id="eventEscanteio" class="btn-event" onclick="prepareEvent('Escanteio')">Escanteio</button>
-    <button id="eventMeta" class="btn-event" onclick="prepareEvent('Meta')">T. Meta ⚽</button>
-    <button id="eventPenalti" class="btn-event" onclick="prepareEvent('Penalti')">Pênalti</button>
+    <button class="btn-event" onclick="prepareEvent('Falta')">Falta ✝️</button>
+    <button class="btn-event" onclick="prepareEvent('Escanteio')">Escanteio</button>
+    <button class="btn-event" onclick="prepareEvent('Meta')">T. Meta ⚽</button>
+    <button class="btn-event" onclick="prepareEvent('Penalti')">Pênalti</button>
+    <button class="btn-event" style="background:#eab308" onclick="prepareEvent('Amarelo')">Amarelo 🟨</button>
+    <button class="btn-event" style="background:#be123c" onclick="prepareEvent('Vermelho')">Vermelho 🟥</button>
     <button class="btn-event" style="background:#333" onclick="toggleRow('deadBallRow', false)">Fechar</button>
 </div>
 
@@ -116,30 +118,29 @@
     if (mode === 'arrow' && arrowStart && arrowEnd) drawSingleArrow(arrowStart.x, arrowStart.y, arrowEnd.x, arrowEnd.y, "rgba(255,255,255,0.5)");
   }
 
-  // ÍCONES MAIORES E NOVOS SÍMBOLOS
   function drawEvents() {
     events.forEach(ev => {
         ctx.textAlign = "center";
         ctx.textBaseline = "middle";
-        ctx.fillStyle = "#fbbf24"; 
-        
         let icon = "";
-        let fontSize = "30px"; // Símbolos maiores
+        let fontSize = "30px";
 
         if (ev.type === "Falta") icon = "✝️";
         else if (ev.type === "Meta") icon = "⚽";
         else if (ev.type === "Escanteio") icon = "◿";
         else if (ev.type === "Penalti") icon = "⦿";
+        else if (ev.type === "Amarelo") icon = "🟨";
+        else if (ev.type === "Vermelho") icon = "🟥";
         
         ctx.font = `${fontSize} sans-serif`;
         ctx.fillText(icon, ev.x, ev.y);
-        
-        ctx.font = "bold 12px sans-serif";
+        ctx.font = "bold 11px sans-serif";
         ctx.fillStyle = "white";
         ctx.fillText(ev.type, ev.x, ev.y + 25);
     });
   }
 
+  // Funções de desenho padrão
   function drawSingleArrow(fx, fy, tx, ty, color) {
     const head = 15; const angle = Math.atan2(ty - fy, tx - fx);
     ctx.strokeStyle = color; ctx.lineWidth = 4; ctx.lineCap = "round";
@@ -166,7 +167,7 @@
     if (pendingEvent) {
         saveHistory();
         events.push({ x: pos.x, y: pos.y, type: pendingEvent });
-        obsArea.value += `[${new Date().toLocaleTimeString()}] ${pendingEvent.toUpperCase()} registrada.\n`;
+        obsArea.value += `[${new Date().toLocaleTimeString()}] CARTÃO ${pendingEvent.toUpperCase()} aplicado.\n`;
         pendingEvent = null; mode = null; updateButtonVisuals(); drawField();
         return;
     }
@@ -229,32 +230,19 @@
   document.getElementById('undoBtn').onclick = () => { if (history.length > 0) { const last = history.pop(); players = last.players; arrows = last.arrows; events = last.events || []; obsArea.value = last.obs || ""; drawField(); } };
   document.getElementById('clearBtn').onclick = () => { if(confirm("Limpar campo?")) { saveHistory(); players = []; arrows = []; events = []; obsArea.value = ""; drawField(); } };
   
-  // PDF E WHATSAPP MANTIDOS
   document.getElementById('saveBtn').onclick = async () => {
     drawField();
     const doc = new jsPDF({ orientation: 'p', unit: 'mm', format: 'a4' });
-    const blueT = document.getElementById('teamBlueName').value.toUpperCase();
-    const redT = document.getElementById('teamRedName').value.toUpperCase();
-    doc.setFont("helvetica", "bold"); doc.setFontSize(16);
-    doc.text(`QUADRO TÁTICO: ${blueT} vs ${redT}`, 105, 20, { align: "center" });
     const canvasImg = canvas.toDataURL("image/jpeg", 1.0);
     doc.addImage(canvasImg, 'JPEG', 15, 30, 180, 112);
-    doc.setFontSize(14); doc.text("OBSERVAÇÕES TÁTICAS:", 15, 155);
-    doc.setFont("helvetica", "normal"); doc.setFontSize(11);
-    const splitObs = doc.splitTextToSize(obsArea.value, 180);
-    doc.text(splitObs, 15, 165);
-    doc.save(`Tatica_${blueT}_vs_${redT}.pdf`);
+    doc.save(`Tatica.pdf`);
   };
 
   document.getElementById('shareBtn').onclick = async () => {
     drawField();
     canvas.toBlob(async (blob) => {
       const file = new File([blob], 'tatica.png', { type: 'image/png' });
-      if (navigator.share && navigator.canShare && navigator.canShare({ files: [file] })) {
-        await navigator.share({ files: [file], title: `Tática`, text: `Estratégia enviada via Quadro Tático` });
-      } else {
-        const link = document.createElement('a'); link.download = 'tatica.png'; link.href = canvas.toDataURL("image/png"); link.click();
-      }
+      if (navigator.share) await navigator.share({ files: [file], title: `Tática` });
     });
   };
 
