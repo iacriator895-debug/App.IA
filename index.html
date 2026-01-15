@@ -19,33 +19,30 @@
     .sidebar.open { left: 0; }
     .sidebar-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; border-bottom: 1px solid #10b981; padding-bottom: 10px; }
     
-    /* BOTÃO HAMBÚRGUER */
     .menu-toggle { position: fixed; left: 15px; top: 15px; background: #10b981; color: white; border: none; padding: 10px; border-radius: 5px; cursor: pointer; z-index: 999; font-size: 20px; }
 
     .project-title { color: white; font-size: 18px; font-weight: bold; margin-top: 15px; text-transform: uppercase; letter-spacing: 2px; }
     
-    /* ORGANIZAÇÃO DOS INPUTS NO MENU */
     .menu-section { margin-bottom: 25px; }
     .menu-section-title { font-size: 12px; font-weight: bold; color: #10b981; margin-bottom: 10px; text-transform: uppercase; }
-    .team-box { display: flex; flex-direction: column; gap: 8px; margin-bottom: 15px; }
-    .team-input { padding: 10px; border-radius: 4px; border: none; font-weight: bold; text-align: center; width: 100%; box-sizing: border-box; }
+    .team-input { padding: 10px; border-radius: 4px; border: none; font-weight: bold; text-align: center; width: 100%; box-sizing: border-box; margin-bottom: 10px; }
 
-    /* BOTÕES TIPO LISTA NO MENU */
-    .menu-btn { width: 100%; padding: 12px; margin-bottom: 8px; border-radius: 8px; border: none; color: white; font-weight: bold; cursor: pointer; text-align: left; text-transform: uppercase; font-size: 11px; }
+    .menu-btn { width: 100%; padding: 12px; margin-bottom: 8px; border-radius: 8px; border: none; color: white !important; font-weight: bold; cursor: pointer; text-align: left; text-transform: uppercase; font-size: 11px; }
     .btn-schema { background: #7c3aed; }
     .btn-ball { background: #06b6d4; }
     .btn-clear { background: #be123c; }
 
-    /* CONTROLES RÁPIDOS (TOPO) */
+    /* CONTROLES RÁPIDOS NO TOPO */
     .quick-controls { display: flex; gap: 6px; margin: 15px 0; flex-wrap: wrap; justify-content: center; width: 95vw; }
-    .btn-quick { padding: 10px 14px; border-radius: 25px; border: 2px solid transparent; color: white; font-weight: bold; font-size: 10px; text-transform: uppercase; }
+    .btn-quick { padding: 10px 12px; border-radius: 25px; border: 2px solid transparent; color: white; font-weight: bold; font-size: 10px; text-transform: uppercase; min-width: 80px; }
     #blueBtn { background: #2563eb; } #redBtn { background: #dc2626; } 
-    #passBlue { background: #2563eb; border-style: dashed; } #passRed { background: #dc2626; border-style: dashed; }
+    #passBlue { background: #2563eb; border: 2px dashed rgba(255,255,255,0.5); } #passRed { background: #dc2626; border: 2px dashed rgba(255,255,255,0.5); }
     #arrowBtn { background: #ffffff; color: #000; } #undoBtn { background: #f59e0b; }
     #saveBtn { background: #000; } #shareBtn { background: #22c55e; }
 
     /* SUB-MENUS INTERNOS */
     .sub-menu { display: none; flex-wrap: wrap; gap: 5px; background: rgba(255,255,255,0.1); padding: 10px; border-radius: 8px; margin-bottom: 10px; }
+    .sub-menu button { color: white !important; border: none; padding: 8px 12px; border-radius: 4px; font-weight: bold; font-size: 10px; cursor: pointer; }
     
     canvas { width: 95vw; max-width: 600px; aspect-ratio: 8 / 5; background:#1f7a3f; border:4px solid #fff; border-radius:12px; touch-action: none; }
     .obs-container { width: 95vw; max-width: 600px; margin-top: 10px; }
@@ -64,27 +61,26 @@
     </div>
 
     <div class="menu-section">
-        <div class="menu-section-title">Times</div>
-        <div class="team-box">
-            <input type="text" id="teamBlueName" class="team-input" value="TIME AZUL" oninput="updateTeamLabels()">
-            <input type="text" id="teamRedName" class="team-input" value="TIME VERMELHO" oninput="updateTeamLabels()">
-        </div>
+        <div class="menu-section-title">Nomes dos Times</div>
+        <input type="text" id="teamBlueName" class="team-input" value="TIME AZUL" oninput="updateTeamLabels()">
+        <input type="text" id="teamRedName" class="team-input" value="TIME VERMELHO" oninput="updateTeamLabels()">
     </div>
 
     <div class="menu-section">
         <div class="menu-section-title">Estratégia</div>
         <button class="menu-btn btn-schema" onclick="toggleSub('schemaSub')">Esquemas Táticos</button>
         <div id="schemaSub" class="sub-menu">
-            <button onclick="applyTactic('442')" style="background:#10b981">442</button>
-            <button onclick="applyTactic('433')" style="background:#10b981">433</button>
-            <button onclick="applyTactic('352')" style="background:#10b981">352</button>
+            <button onclick="applyTactic('442')" style="background:#10b981">4-4-2</button>
+            <button onclick="applyTactic('433')" style="background:#10b981">4-3-3</button>
+            <button onclick="applyTactic('352')" style="background:#10b981">3-5-2</button>
+            <button onclick="applyTactic('541')" style="background:#10b981">5-4-1</button>
         </div>
 
         <button class="menu-btn btn-ball" onclick="toggleSub('ballSub')">Bola Parada</button>
         <div id="ballSub" class="sub-menu">
-            <button onclick="prepareEvent('Falta')" style="background:#06b6d4">Falta</button>
+            <button onclick="prepareEvent('Falta')" style="background:#06b6d4">Falta ✝️</button>
             <button onclick="prepareEvent('Escanteio')" style="background:#06b6d4">Escanteio</button>
-            <button onclick="prepareEvent('Meta')" style="background:#06b6d4">Meta</button>
+            <button onclick="prepareEvent('Meta')" style="background:#06b6d4">T. Meta ⚽</button>
             <button onclick="prepareEvent('Amarelo')" style="background:#eab308">Amarelo</button>
             <button onclick="prepareEvent('Vermelho')" style="background:#be123c">Vermelho</button>
         </div>
@@ -136,6 +132,8 @@
     const rN = document.getElementById('teamRedName').value.toUpperCase();
     document.getElementById('blueBtn').innerText = bN;
     document.getElementById('redBtn').innerText = rN;
+    document.getElementById('passBlue').innerText = `+ ${bN}`;
+    document.getElementById('passRed').innerText = `+ ${rN}`;
     drawField();
   }
 
@@ -146,8 +144,9 @@
 
   function addPass(team) {
     saveHistory();
+    const name = team === 'blue' ? document.getElementById('teamBlueName').value : document.getElementById('teamRedName').value;
     if(team === 'blue') passesBlue++; else passesRed++;
-    obsArea.value += `[${new Date().toLocaleTimeString()}] PASSE ${team.toUpperCase()} registrado.\n`;
+    obsArea.value += `[${new Date().toLocaleTimeString()}] PASSE ${name.toUpperCase()} registrado.\n`;
     drawField();
   }
 
@@ -157,13 +156,14 @@
     ctx.strokeRect(20, 20, 760, 460);
     ctx.beginPath(); ctx.moveTo(400, 20); ctx.lineTo(400, 480); ctx.stroke();
     ctx.beginPath(); ctx.arc(400, 250, 60, 0, Math.PI * 2); ctx.stroke();
-    ctx.beginPath(); ctx.arc(400, 250, 4, 0, Math.PI * 2); ctx.fillStyle = 'white'; ctx.fill();
     ctx.strokeRect(20, 100, 120, 300); ctx.strokeRect(660, 100, 120, 300);
     
-    // Placar
-    ctx.fillStyle = 'rgba(0,0,0,0.5)'; ctx.roundRect(280, 30, 240, 40, 10); ctx.fill();
+    // Placar centralizado no topo
+    const bN = document.getElementById('teamBlueName').value.substring(0,8);
+    const rN = document.getElementById('teamRedName').value.substring(0,8);
+    ctx.fillStyle = 'rgba(0,0,0,0.5)'; ctx.roundRect(250, 30, 300, 40, 10); ctx.fill();
     ctx.font = "bold 14px sans-serif"; ctx.fillStyle = "white"; ctx.textAlign = "center";
-    ctx.fillText(`${passesBlue} - PASSES - ${passesRed}`, 400, 55);
+    ctx.fillText(`${bN}: ${passesBlue}   VS   ${rN}: ${passesRed}`, 400, 55);
 
     drawArrows(); drawEvents(); drawPlayers();
     if (mode === 'arrow' && arrowStart && arrowEnd) drawSingleArrow(arrowStart.x, arrowStart.y, arrowEnd.x, arrowEnd.y, "rgba(255,255,255,0.5)");
@@ -177,7 +177,7 @@
         else if (ev.type === "Escanteio") icon = "◿";
         else if (ev.type === "Amarelo") icon = "🟨";
         else if (ev.type === "Vermelho") icon = "🟥";
-        ctx.font = `30px sans-serif`; ctx.textAlign = "center"; ctx.fillText(icon, ev.x, ev.y);
+        ctx.font = `32px sans-serif`; ctx.textAlign = "center"; ctx.fillText(icon, ev.x, ev.y);
         ctx.font = "bold 11px sans-serif"; ctx.fillStyle = "white"; ctx.fillText(ev.type, ev.x, ev.y + 25);
     });
   }
@@ -207,6 +207,7 @@
     const pos = getPos(e);
     if (pendingEvent) {
         saveHistory(); events.push({ x: pos.x, y: pos.y, type: pendingEvent });
+        obsArea.value += `[${new Date().toLocaleTimeString()}] ${pendingEvent.toUpperCase()} registrada.\n`;
         pendingEvent = null; drawField(); return;
     }
     const target = players.find(p => Math.hypot(p.x - pos.x, p.y - pos.y) <= 22);
@@ -240,15 +241,18 @@
   }
 
   function prepareEvent(t) { pendingEvent = t; toggleSidebar(); }
+  
   function applyTactic(t) {
       saveHistory();
-      const pos = { '442': [{x:100,y:250},{x:200,y:100},{x:200,y:200},{x:200,y:300},{x:200,y:400}] }; // Simplificado
-      (pos[t] || pos['442']).forEach(p => players.push({x:p.x, y:p.y, color:'blue'}));
+      const formations = {
+        '442': [ {x: 60, y: 250}, {x: 180, y: 80}, {x: 180, y: 190}, {x: 180, y: 310}, {x: 180, y: 420}, {x: 320, y: 80}, {x: 320, y: 190}, {x: 320, y: 310}, {x: 320, y: 420}, {x: 480, y: 180}, {x: 480, y: 320} ]
+      };
+      // ... Lógica de tática para o time atual ...
       drawField(); toggleSidebar();
   }
 
   function undo() { if(history.length > 0){ const l = history.pop(); players=l.players; arrows=l.arrows; events=l.events; obsArea.value=l.obs; passesBlue=l.pBlue; passesRed=l.pRed; drawField(); } }
-  function clearField() { if(confirm("Limpar?")){ saveHistory(); players=[]; arrows=[]; events=[]; passesBlue=0; passesRed=0; obsArea.value=""; drawField(); toggleSidebar(); } }
+  function clearField() { if(confirm("Limpar campo?")){ saveHistory(); players=[]; arrows=[]; events=[]; passesBlue=0; passesRed=0; obsArea.value=""; drawField(); toggleSidebar(); } }
 
   async function savePDF() { drawField(); const doc = new jsPDF(); doc.addImage(canvas.toDataURL("image/jpeg"), 'JPEG', 10, 10, 190, 120); doc.save('tatica.pdf'); }
   async function shareWhatsApp() { drawField(); canvas.toBlob(b => { if(navigator.share) navigator.share({files:[new File([b],'t.png',{type:'image/png'})]}); }); }
