@@ -36,15 +36,31 @@
     }
 
     button {
-      padding: 8px 14px;
+      padding: 16px 26px;
       border: none;
-      border-radius: 6px;
+      border-radius: 50px;
       cursor: pointer;
       font-weight: bold;
+      font-size: 16px;
+      box-shadow: inset 0 4px 6px rgba(255,255,255,0.4), inset 0 -4px 6px rgba(0,0,0,0.3), 0 6px 10px rgba(0,0,0,0.4);
+      transition: transform 0.1s ease, box-shadow 0.1s ease;
     }
 
-    #blueBtn { background: #1e90ff; color: white; }
-    #redBtn { background: #e63946; color: white; }
+    button:active {
+      transform: scale(0.95);
+      box-shadow: inset 0 2px 4px rgba(0,0,0,0.4);
+    }
+
+    #blueBtn {
+      background: radial-gradient(circle at top, #5dade2, #1e90ff, #0b3c5d);
+      color: white;
+      min-width: 160px;
+    }
+    #redBtn {
+      background: radial-gradient(circle at top, #ff7b7b, #e63946, #7a0f1b);
+      color: white;
+      min-width: 160px;
+    }
     #saveBtn { background: #222; color: white; }
 
     canvas {
@@ -151,8 +167,14 @@
       addPlayer(x, y);
     });
 
-    document.getElementById('blueBtn').onclick = () => currentColor = 'blue';
-    document.getElementById('redBtn').onclick = () => currentColor = 'red';
+    document.getElementById('blueBtn').onclick = () => {
+      currentColor = 'blue';
+      navigator.vibrate?.(30);
+    };
+    document.getElementById('redBtn').onclick = () => {
+      currentColor = 'red';
+      navigator.vibrate?.(30);
+    };
 
     document.getElementById('saveBtn').onclick = () => {
       const data = {
