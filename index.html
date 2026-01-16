@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>QUADRO TÁTICO – PRO SCOUT FINAL</title>
+  <title>QUADRO TÁTICO – PRO SCOUT</title>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
   <style>
     html, body { margin: 0; padding: 0; height: 100%; background:#0b3d2e; font-family: sans-serif; overflow: hidden; }
@@ -40,12 +40,13 @@
 
     .project-title { color: white; font-size: 14px; font-weight: bold; margin-top: 55px; text-transform: uppercase; letter-spacing: 2px; }
     
-    /* MENU SECTION */
     .menu-section { margin-bottom: 25px; }
     .menu-section-title { font-size: 12px; font-weight: bold; color: #10b981; margin-bottom: 10px; text-transform: uppercase; }
     .team-input { padding: 10px; border-radius: 4px; border: none; font-weight: bold; text-align: center; width: 100%; box-sizing: border-box; margin-bottom: 10px; }
 
     .menu-btn { width: 100%; padding: 12px; margin-bottom: 8px; border-radius: 8px; border: none; color: white !important; font-weight: bold; cursor: pointer; text-align: left; text-transform: uppercase; font-size: 11px; }
+    .btn-blue { background: #2563eb; }
+    .btn-red { background: #dc2626; }
     .btn-schema { background: #7c3aed; }
     .btn-ball { background: #06b6d4; }
     .btn-clear { background: #be123c; }
@@ -53,13 +54,11 @@
     /* QUICK CONTROLS */
     .quick-controls { display: flex; gap: 6px; margin: 10px 0; flex-wrap: wrap; justify-content: center; width: 95vw; }
     .btn-quick { padding: 10px 12px; border-radius: 25px; border: 2px solid transparent; color: white; font-weight: bold; font-size: 10px; text-transform: uppercase; min-width: 80px; }
-    #blueBtn { background: #2563eb; } #redBtn { background: #dc2626; } 
     #passBlue { background: #2563eb; border: 2px dashed rgba(255,255,255,0.6); } 
     #passRed { background: #dc2626; border: 2px dashed rgba(255,255,255,0.6); }
     #arrowBtn { background: #ffffff; color: #000; } #undoBtn { background: #f59e0b; }
     #saveBtn { background: #000; }
 
-    /* SUB-MENUS */
     .sub-menu { display: none; flex-wrap: wrap; gap: 5px; background: rgba(255,255,255,0.1); padding: 10px; border-radius: 8px; margin-bottom: 10px; }
     .sub-menu button { color: white !important; border: none; padding: 8px 12px; border-radius: 4px; font-weight: bold; font-size: 10px; cursor: pointer; }
     
@@ -77,9 +76,7 @@
 <div class="project-title">QUADRO TÁTICO</div>
 
 <div class="quick-controls">
-    <button id="blueBtn" class="btn-quick" onclick="setMode('blue')">AZUL</button>
     <button id="passBlue" class="btn-quick" onclick="addPass('blue')">+ PASSE</button>
-    <button id="redBtn" class="btn-quick" onclick="setMode('red')">VERMELHO</button>
     <button id="passRed" class="btn-quick" onclick="addPass('red')">+ PASSE</button>
     <button id="arrowBtn" class="btn-quick" onclick="setMode('arrow')">Seta</button>
     <button id="undoBtn" class="btn-quick" onclick="undo()">Desfazer</button>
@@ -105,9 +102,15 @@
     </div>
     
     <div class="menu-section">
-        <div class="menu-section-title">Equipes</div>
+        <div class="menu-section-title">Nomes das Equipes</div>
         <input type="text" id="teamBlueName" class="team-input" value="TIME AZUL" oninput="updateTeamLabels()">
         <input type="text" id="teamRedName" class="team-input" value="TIME VERMELHO" oninput="updateTeamLabels()">
+    </div>
+
+    <div class="menu-section">
+        <div class="menu-section-title">Jogadores</div>
+        <button id="sideBlueBtn" class="menu-btn btn-blue" onclick="setModeFromSidebar('blue')">Adicionar JOGADOR AZUL</button>
+        <button id="sideRedBtn" class="menu-btn btn-red" onclick="setModeFromSidebar('red')">Adicionar JOGADOR VERMELHO</button>
     </div>
 
     <div class="menu-section">
@@ -171,6 +174,12 @@
     el.style.display = (el.style.display === 'flex') ? 'none' : 'flex';
   }
 
+  function setModeFromSidebar(m) {
+    mode = m;
+    toggleSidebar();
+    updateVisuals();
+  }
+
   // TÁTICAS
   function applyTactic(tactic) {
     saveHistory();
@@ -190,8 +199,8 @@
   function updateTeamLabels() {
     const b = document.getElementById('teamBlueName').value.toUpperCase();
     const r = document.getElementById('teamRedName').value.toUpperCase();
-    document.getElementById('blueBtn').innerText = b;
-    document.getElementById('redBtn').innerText = r;
+    document.getElementById('sideBlueBtn').innerText = `Adicionar JOGADOR ${b}`;
+    document.getElementById('sideRedBtn').innerText = `Adicionar JOGADOR ${r}`;
     document.getElementById('passBlue').innerText = `+ ${b}`;
     document.getElementById('passRed').innerText = `+ ${r}`;
     drawField();
@@ -256,7 +265,10 @@
   canvas.addEventListener('pointerup', () => { if (mode === 'arrow' && arrowStart && arrowEnd) { if (Math.hypot(arrowStart.x - arrowEnd.x, arrowStart.y - arrowEnd.y) > 15) arrows.push({ x1: arrowStart.x, y1: arrowStart.y, x2: arrowEnd.x, y2: arrowEnd.y }); mode = null; updateVisuals(); } draggingPlayer = null; arrowStart = null; arrowEnd = null; drawField(); });
 
   function setMode(m) { mode = m; updateVisuals(); }
-  function updateVisuals() { ['blueBtn','redBtn','arrowBtn'].forEach(id => document.getElementById(id).classList.remove('active')); if(mode === 'blue') document.getElementById('blueBtn').classList.add('active'); if(mode === 'red') document.getElementById('redBtn').classList.add('active'); if(mode === 'arrow') document.getElementById('arrowBtn').classList.add('active'); }
+  function updateVisuals() { 
+    ['arrowBtn'].forEach(id => document.getElementById(id).classList.remove('active')); 
+    if(mode === 'arrow') document.getElementById('arrowBtn').classList.add('active'); 
+  }
 
   function prepareEvent(t) { pendingEvent = t; toggleSidebar(); }
   function undo() { if(history.length > 0){ const l = history.pop(); players=l.players; arrows=l.arrows; events=l.events; obsArea.value=l.obs; passesBlue=l.pBlue; passesRed=l.pRed; drawField(); } }
