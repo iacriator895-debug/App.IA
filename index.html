@@ -32,6 +32,7 @@
     }
     .timeline-event { display: inline-flex; flex-direction: column; align-items: center; background: rgba(255,255,255,0.1); padding: 5px 10px; border-radius: 6px; border-left: 3px solid #10b981; color: white; }
 
+    /* GRÁFICOS DINÂMICOS */
     .stats-container { width: 95vw; max-width: 600px; margin-top: 15px; background: rgba(0,0,0,0.3); padding: 15px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.1); }
     .stats-title { color: #10b981; font-size: 11px; font-weight: bold; text-transform: uppercase; margin-bottom: 8px; text-align: center; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 5px; }
     .bar-wrapper { display: flex; align-items: center; margin-bottom: 6px; gap: 10px; }
@@ -49,7 +50,7 @@
     #passBlue { background: #2563eb; } #passRed { background: #dc2626; } #saveBtn { background: #000; }
 
     .timer-container { background: #000; color: #10b981; padding: 10px 25px; border-radius: 12px; font-size: 24px; font-weight: bold; margin-top: 15px; border: 2px solid #10b981; font-family: monospace; }
-    .team-input { padding: 8px; border-radius: 4px; border: none; width: 100%; margin-bottom: 5px; font-weight: bold; color: #000; }
+    .team-input { padding: 8px; border-radius: 4px; border: none; width: 100%; margin-bottom: 5px; font-weight: bold; }
     .sub-menu { display: none; flex-direction: column; gap: 5px; background: rgba(255,255,255,0.1); padding: 10px; border-radius: 8px; }
     .sub-menu button { background: rgba(255,255,255,0.1); color: white; border: none; padding: 10px; text-align: left; cursor: pointer; font-size: 11px; font-weight: bold; }
   </style>
@@ -112,6 +113,18 @@
         <div class="bar-bg"><div id="fillEscRed" class="bar-fill" style="background: #dc2626;"></div></div>
         <div id="countEscRed" class="bar-count">0</div>
     </div>
+
+    <div class="stats-title" style="margin-top:10px">Faltas</div>
+    <div class="bar-wrapper">
+        <div class="labelBlueTxt bar-label">AZUL</div>
+        <div class="bar-bg"><div id="fillFoulBlue" class="bar-fill" style="background: #2563eb;"></div></div>
+        <div id="countFoulBlue" class="bar-count">0</div>
+    </div>
+    <div class="bar-wrapper">
+        <div class="labelRedTxt bar-label">VERM</div>
+        <div class="bar-bg"><div id="fillFoulRed" class="bar-fill" style="background: #dc2626;"></div></div>
+        <div id="countFoulRed" class="bar-count">0</div>
+    </div>
 </div>
 
 <div class="timer-container" id="displayTimer">00:00</div>
@@ -142,9 +155,14 @@
             <p style="font-size: 9px; color: #fff; margin: 5px 0;">GOL PARA:</p>
             <button id="menuGoalBlue" onclick="prepareEvent('GOL AZUL', '⚽', 'blue')" style="background:#2563eb">GOL AZUL ⚽</button>
             <button id="menuGoalRed" onclick="prepareEvent('GOL VERM', '⚽', 'red')" style="background:#dc2626">GOL VERMELHO ⚽</button>
+            
+            <p style="font-size: 9px; color: #fff; margin: 5px 0;">FALTA PARA:</p>
+            <button id="menuFoulBlue" onclick="prepareEvent('FALTA AZUL', '❌', 'blue')" style="background:#2563eb">FALTA AZUL ❌</button>
+            <button id="menuFoulRed" onclick="prepareEvent('FALTA VERM', '❌', 'red')" style="background:#dc2626">FALTA VERMELHA ❌</button>
+
             <p style="font-size: 9px; color: #fff; margin: 5px 0;">OUTROS:</p>
-            <button onclick="prepareEvent('Falta', '❌')">Falta ❌</button>
             <button onclick="prepareEvent('Penalti', '🎯')">Pênalti 🎯</button>
+            
             <p style="font-size: 9px; color: #fff; margin: 5px 0;">ESCANTEIO PARA:</p>
             <button id="menuEscBlue" onclick="prepareEvent('ESC. AZUL', '🚩', 'blue')" style="background:#2563eb">ESC. AZUL 🚩</button>
             <button id="menuEscRed" onclick="prepareEvent('ESC. VERM', '🚩', 'red')" style="background:#dc2626">ESC. VERMELHO 🚩</button>
@@ -157,7 +175,7 @@
   const canvas = document.getElementById('field'); const ctx = canvas.getContext('2d');
   const obsArea = document.getElementById('obsArea'); const timeline = document.getElementById('timeline');
   let players = [], events = [], history = [];
-  let passesBlue = 0, passesRed = 0, escBlue = 0, escRed = 0, goalBlue = 0, goalRed = 0, pendingEvent = null;
+  let passesBlue = 0, passesRed = 0, escBlue = 0, escRed = 0, goalBlue = 0, goalRed = 0, foulBlue = 0, foulRed = 0, pendingEvent = null;
 
   function init() { drawField(); updateUI(); }
 
@@ -178,7 +196,6 @@
     const name = team === 'blue' ? document.getElementById('teamBlueName').value : document.getElementById('teamRedName').value;
     if(team === 'blue') passesBlue++; else passesRed++;
     updateUI();
-    // Adiciona log específico com o nome do time
     const time = document.getElementById('displayTimer').innerText;
     obsArea.value += `[${time}] PASSE ${name.toUpperCase()}\n`;
   }
@@ -186,39 +203,45 @@
   function updateUI() {
     const nB = document.getElementById('teamBlueName').value;
     const nR = document.getElementById('teamRedName').value;
-    
-    // Atualiza Labels nos Gráficos
     document.querySelectorAll('.labelBlueTxt').forEach(el => el.innerText = nB.substring(0,10));
     document.querySelectorAll('.labelRedTxt').forEach(el => el.innerText = nR.substring(0,10));
     
-    // ATUALIZAÇÃO DOS BOTÕES NO MENU LATERAL
     document.getElementById('menuGoalBlue').innerText = `GOL ${nB.toUpperCase()} ⚽`;
     document.getElementById('menuGoalRed').innerText = `GOL ${nR.toUpperCase()} ⚽`;
+    document.getElementById('menuFoulBlue').innerText = `FALTA ${nB.toUpperCase()} ❌`;
+    document.getElementById('menuFoulRed').innerText = `FALTA ${nR.toUpperCase()} ❌`;
     document.getElementById('menuEscBlue').innerText = `ESC. ${nB.toUpperCase()} 🚩`;
     document.getElementById('menuEscRed').innerText = `ESC. ${nR.toUpperCase()} 🚩`;
-
-    // ATUALIZAÇÃO DOS BOTÕES DE PASSE NA TELA PRINCIPAL
     document.getElementById('passBlue').innerText = `+ ${nB.toUpperCase()}`;
     document.getElementById('passRed').innerText = `+ ${nR.toUpperCase()}`;
     
-    // Cálculos de Barras
+    // Gols
     const totalG = goalBlue + goalRed;
     document.getElementById('countGoalBlue').innerText = goalBlue;
     document.getElementById('countGoalRed').innerText = goalRed;
     document.getElementById('fillGoalBlue').style.width = (totalG === 0 ? 0 : (goalBlue/totalG)*100) + '%';
     document.getElementById('fillGoalRed').style.width = (totalG === 0 ? 0 : (goalRed/totalG)*100) + '%';
 
+    // Passes
     const totalP = passesBlue + passesRed;
     document.getElementById('countPassBlue').innerText = passesBlue;
     document.getElementById('countPassRed').innerText = passesRed;
     document.getElementById('fillPassBlue').style.width = (totalP === 0 ? 0 : (passesBlue/totalP)*100) + '%';
     document.getElementById('fillPassRed').style.width = (totalP === 0 ? 0 : (passesRed/totalP)*100) + '%';
 
+    // Escanteios
     const totalE = escBlue + escRed;
     document.getElementById('countEscBlue').innerText = escBlue;
     document.getElementById('countEscRed').innerText = escRed;
     document.getElementById('fillEscBlue').style.width = (totalE === 0 ? 0 : (escBlue/totalE)*100) + '%';
     document.getElementById('fillEscRed').style.width = (totalE === 0 ? 0 : (escRed/totalE)*100) + '%';
+
+    // Faltas
+    const totalF = foulBlue + foulRed;
+    document.getElementById('countFoulBlue').innerText = foulBlue;
+    document.getElementById('countFoulRed').innerText = foulRed;
+    document.getElementById('fillFoulBlue').style.width = (totalF === 0 ? 0 : (foulBlue/totalF)*100) + '%';
+    document.getElementById('fillFoulRed').style.width = (totalF === 0 ? 0 : (foulRed/totalF)*100) + '%';
 
     drawField();
   }
@@ -238,8 +261,8 @@
     events.forEach(ev => { ctx.font="30px Arial"; ctx.fillText(ev.icon, ev.x, ev.y); });
   }
 
-  function saveHistory() { history.push({ pB: passesBlue, pR: passesRed, eB: escBlue, eR: escRed, gB: goalBlue, gR: goalRed, pl: JSON.parse(JSON.stringify(players)), ev: JSON.parse(JSON.stringify(events)) }); }
-  function undo() { if(history.length){ const l = history.pop(); passesBlue=l.pB; passesRed=l.pR; escBlue=l.eB; escRed=l.eR; goalBlue=l.gB; goalRed=l.gR; players=l.pl; events=l.ev; updateUI(); } }
+  function saveHistory() { history.push({ pB: passesBlue, pR: passesRed, eB: escBlue, eR: escRed, gB: goalBlue, gR: goalRed, fB: foulBlue, fR: foulRed, pl: JSON.parse(JSON.stringify(players)), ev: JSON.parse(JSON.stringify(events)) }); }
+  function undo() { if(history.length){ const l = history.pop(); passesBlue=l.pB; passesRed=l.pR; escBlue=l.eB; escRed=l.eR; goalBlue=l.gB; goalRed=l.gR; foulBlue=l.fB; foulRed=l.fR; players=l.pl; events=l.ev; updateUI(); } }
 
   let dragging = null;
   canvas.addEventListener('pointerdown', e => {
@@ -252,7 +275,6 @@
         const nR = document.getElementById('teamRedName').value;
         let finalActionName = pendingEvent.type;
         
-        // Customiza o nome da ação baseada no time antes de mandar pra Timeline
         if(pendingEvent.type.includes('GOL')){
             if(pendingEvent.team === 'blue') { goalBlue++; finalActionName = `GOL ${nB.toUpperCase()}`; }
             else { goalRed++; finalActionName = `GOL ${nR.toUpperCase()}`; }
@@ -260,6 +282,10 @@
         if(pendingEvent.type.includes('ESC')){
             if(pendingEvent.team === 'blue') { escBlue++; finalActionName = `ESC. ${nB.toUpperCase()}`; }
             else { escRed++; finalActionName = `ESC. ${nR.toUpperCase()}`; }
+        }
+        if(pendingEvent.type.includes('FALTA')){
+            if(pendingEvent.team === 'blue') { foulBlue++; finalActionName = `FALTA ${nB.toUpperCase()}`; }
+            else { foulRed++; finalActionName = `FALTA ${nR.toUpperCase()}`; }
         }
         
         events.push({x, y, icon: pendingEvent.icon});
@@ -299,7 +325,7 @@
     if(t==='442') players = [{x:80,y:250},{x:180,y:100},{x:180,y:200},{x:180,y:300},{x:180,y:400},{x:350,y:100},{x:350,y:200},{x:350,y:300},{x:350,y:400},{x:550,y:180},{x:550,y:320}];
     drawField(); toggleSidebar();
   }
-  function clearAll() { if(confirm("Limpar tudo?")) { players=[]; events=[]; passesBlue=0; passesRed=0; escBlue=0; escRed=0; goalBlue=0; goalRed=0; resetTimer(); updateUI(); timeline.innerHTML=''; obsArea.value=''; } }
+  function clearAll() { if(confirm("Limpar tudo?")) { players=[]; events=[]; passesBlue=0; passesRed=0; escBlue=0; escRed=0; goalBlue=0; goalRed=0; foulBlue=0; foulRed=0; resetTimer(); updateUI(); timeline.innerHTML=''; obsArea.value=''; } }
   function savePDF() { const doc = new jsPDF('l'); doc.addImage(canvas.toDataURL(), 'PNG', 10, 10, 280, 175); doc.save('scout_final.pdf'); }
 </script>
 </body>
