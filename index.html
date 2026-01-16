@@ -9,17 +9,18 @@
     html, body { margin: 0; padding: 0; height: 100%; background:#0b3d2e; font-family: sans-serif; overflow: hidden; }
     body { display:flex; flex-direction: column; align-items:center; }
 
-    /* ESTILO DO TÍTULO SOLICITADO */
+    /* TÍTULO AJUSTADO: ARIAL NARROW, BLACK (900), ITÁLICO, TAMANHO 50 */
     .project-title { 
       color: white; 
       font-family: "Arial Narrow", sans-serif; 
-      font-weight: 700; 
+      font-weight: 900; 
       font-style: italic; 
-      font-size: 65px; 
+      font-size: 50px; 
       margin-top: 50px; 
       margin-bottom: 10px;
       text-transform: uppercase; 
       text-align: center;
+      letter-spacing: -1px;
     }
 
     /* MENU LATERAL */
@@ -176,7 +177,7 @@
   let mode = null, players = [], arrows = [], events = [], history = [];
   let draggingPlayer = null, arrowStart = null, arrowEnd = null, passesBlue = 0, passesRed = 0, pendingEvent = null;
 
-  // PERSISTÊNCIA (MEMÓRIA PERMANENTE)
+  // PERSISTÊNCIA
   function saveToStorage(games) { localStorage.setItem('scout_games', JSON.stringify(games)); }
   function getFromStorage() { return JSON.parse(localStorage.getItem('scout_games')) || []; }
 
