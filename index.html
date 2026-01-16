@@ -21,13 +21,14 @@
     
     .menu-toggle { position: fixed; left: 15px; top: 15px; background: #10b981; color: white; border: none; padding: 10px; border-radius: 5px; cursor: pointer; z-index: 999; font-size: 20px; }
 
-    /* CRONÔMETRO NO TOPO */
+    /* CRONÔMETRO POSICIONADO ABAIXO DO QUADRO */
     .timer-container {
-      background: #000; color: #10b981; padding: 5px 20px; border-radius: 0 0 15px 15px;
-      font-family: 'Courier New', Courier, monospace; font-size: 24px; font-weight: bold;
-      border: 2px solid #10b981; border-top: none; display: flex; align-items: center; gap: 15px;
+      background: #000; color: #10b981; padding: 8px 20px; border-radius: 12px;
+      font-family: 'Courier New', Courier, monospace; font-size: 22px; font-weight: bold;
+      border: 2px solid #10b981; display: flex; align-items: center; gap: 15px;
+      margin-top: 10px; width: fit-content;
     }
-    .timer-controls { background: #10b981; color: white; border: none; padding: 2px 8px; border-radius: 4px; font-size: 12px; cursor: pointer; text-transform: uppercase; }
+    .timer-controls { background: #10b981; color: white; border: none; padding: 4px 10px; border-radius: 4px; font-size: 11px; cursor: pointer; text-transform: uppercase; font-weight: bold; }
 
     /* WHATSAPP FLUTUANTE */
     .whatsapp-float {
@@ -37,7 +38,7 @@
       box-shadow: 2px 2px 10px rgba(0,0,0,0.4); cursor: pointer; z-index: 1001; border: none;
     }
 
-    .project-title { color: white; font-size: 14px; font-weight: bold; margin-top: 5px; text-transform: uppercase; letter-spacing: 2px; }
+    .project-title { color: white; font-size: 14px; font-weight: bold; margin-top: 50px; text-transform: uppercase; letter-spacing: 2px; }
     
     .menu-section { margin-bottom: 25px; }
     .menu-section-title { font-size: 12px; font-weight: bold; color: #10b981; margin-bottom: 10px; text-transform: uppercase; }
@@ -70,12 +71,6 @@
 <button class="menu-toggle" onclick="toggleSidebar()">☰</button>
 <button class="whatsapp-float" onclick="shareWhatsApp()">💬</button>
 
-<div class="timer-container">
-    <span id="displayTimer">00:00</span>
-    <button id="timerToggle" class="timer-controls" onclick="toggleTimer()">Play</button>
-    <button class="timer-controls" onclick="resetTimer()" style="background:#be123c">Reset</button>
-</div>
-
 <div class="project-title">QUADRO TÁTICO</div>
 
 <div class="quick-controls">
@@ -89,6 +84,12 @@
 </div>
 
 <canvas id="field" width="800" height="500"></canvas>
+
+<div class="timer-container">
+    <span id="displayTimer">00:00</span>
+    <button id="timerToggle" class="timer-controls" onclick="toggleTimer()">Play</button>
+    <button class="timer-controls" onclick="resetTimer()" style="background:#be123c">Reset</button>
+</div>
 
 <div class="obs-container">
     <textarea id="obsArea" placeholder="Anotações técnicas..."></textarea>
@@ -194,7 +195,6 @@
     ctx.beginPath(); ctx.arc(400, 250, 60, 0, Math.PI * 2); ctx.stroke();
     ctx.strokeRect(20, 100, 120, 300); ctx.strokeRect(660, 100, 120, 300);
     
-    // Placar
     const bN = document.getElementById('teamBlueName').value.substring(0,8);
     const rN = document.getElementById('teamRedName').value.substring(0,8);
     ctx.fillStyle = 'rgba(0,0,0,0.6)'; ctx.roundRect(250, 25, 300, 35, 10); ctx.fill();
@@ -276,14 +276,12 @@
   }
 
   function prepareEvent(t) { pendingEvent = t; toggleSidebar(); }
-  
   function applyTactic(t) {
       saveHistory(); players = [];
       const formations = { '442': [{x:100,y:250},{x:200,y:80},{x:200,y:190},{x:200,y:310},{x:200,y:420}] };
       (formations[t] || formations['442']).forEach(p => players.push({x:p.x, y:p.y, color:'blue'}));
       drawField(); toggleSidebar();
   }
-
   function undo() { if(history.length > 0){ const l = history.pop(); players=l.players; arrows=l.arrows; events=l.events; obsArea.value=l.obs; passesBlue=l.pBlue; passesRed=l.pRed; drawField(); } }
   function clearField() { if(confirm("Limpar campo?")){ saveHistory(); players=[]; arrows=[]; events=[]; passesBlue=0; passesRed=0; obsArea.value=""; drawField(); resetTimer(); toggleSidebar(); } }
 
