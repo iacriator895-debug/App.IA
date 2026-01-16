@@ -41,7 +41,10 @@
     .project-title { color: white; font-size: 14px; font-weight: bold; margin-top: 55px; text-transform: uppercase; letter-spacing: 2px; }
     
     .menu-section { margin-bottom: 25px; }
-    .menu-section-title { font-size: 12px; font-weight: bold; color: #10b981; margin-bottom: 10px; text-transform: uppercase; }
+    .menu-section-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+    .menu-section-title { font-size: 12px; font-weight: bold; color: #10b981; text-transform: uppercase; }
+    .btn-delete-mode { background: none; border: none; color: #be123c; cursor: pointer; font-size: 18px; padding: 0; }
+    
     .team-input { padding: 10px; border-radius: 4px; border: none; font-weight: bold; text-align: center; width: 100%; box-sizing: border-box; margin-bottom: 10px; }
 
     .menu-btn { width: 100%; padding: 12px; margin-bottom: 8px; border-radius: 8px; border: none; color: white !important; font-weight: bold; cursor: pointer; text-align: left; text-transform: uppercase; font-size: 11px; }
@@ -57,12 +60,15 @@
     #passBlue { background: #2563eb; border: 2px dashed rgba(255,255,255,0.6); } 
     #passRed { background: #dc2626; border: 2px dashed rgba(255,255,255,0.6); }
     #arrowBtn { background: #ffffff; color: #000; } #undoBtn { background: #f59e0b; }
-    #saveGameBtn { background: #f97316; } /* Cor Laranja para Salvar Jogo */
+    #saveGameBtn { background: #f97316; }
     #saveBtn { background: #000; }
 
     .sub-menu { display: none; flex-direction: column; gap: 5px; background: rgba(255,255,255,0.1); padding: 10px; border-radius: 8px; margin-bottom: 10px; }
-    .sub-menu button { color: white !important; border: none; padding: 10px; border-radius: 4px; font-weight: bold; font-size: 11px; cursor: pointer; text-align: left; background: rgba(255,255,255,0.05); margin-bottom: 4px; }
+    .sub-menu button { color: white !important; border: none; padding: 10px; border-radius: 4px; font-weight: bold; font-size: 11px; cursor: pointer; text-align: left; background: rgba(255,255,255,0.05); margin-bottom: 4px; transition: 0.2s; }
     
+    /* ESTILO SELEÇÃO PARA EXCLUIR */
+    .sub-menu button.selected-to-delete { border: 2px solid #f59e0b; background: rgba(190, 18, 60, 0.3); }
+
     canvas { width: 95vw; max-width: 600px; aspect-ratio: 8 / 5; background:#1f7a3f; border:4px solid #fff; border-radius:12px; touch-action: none; }
     .obs-container { width: 95vw; max-width: 600px; margin-top: 10px; }
     #obsArea { width: 100%; height: 80px; padding: 10px; border-radius: 8px; border: 2px solid #fff; background: rgba(255,255,255,0.1); color: white; resize: none; font-family: Arial, sans-serif; font-size: 12px; box-sizing: border-box; }
@@ -104,14 +110,17 @@
     </div>
     
     <div class="menu-section">
-        <div class="menu-section-title">Lista de Jogos</div>
-        <div id="gamesSubList" style="display: flex; flex-direction: column; gap: 5px;">
-            <p id="noGamesMsg" style="font-size: 11px; opacity: 0.5; text-align: center;">Nenhum jogo salvo ainda.</p>
+        <div class="menu-section-header">
+            <div class="menu-section-title">Lista de Jogos</div>
+            <button class="btn-delete-mode" onclick="deleteSelectedGames()" title="Excluir selecionados">🗑️</button>
+        </div>
+        <div id="gamesSubList" style="display: flex; flex-direction: column; gap: 5px; min-height: 40px; background: rgba(255,255,255,0.05); padding: 5px; border-radius: 8px;">
+            <p id="noGamesMsg" style="font-size: 11px; opacity: 0.5; text-align: center; margin: 10px 0;">Segure um jogo para selecionar e excluir.</p>
         </div>
     </div>
 
     <div class="menu-section">
-        <div class="menu-section-title">Nomes das Equipes</div>
+        <div class="menu-section-title">Equipes</div>
         <input type="text" id="teamBlueName" class="team-input" value="TIME AZUL" oninput="updateTeamLabels()">
         <input type="text" id="teamRedName" class="team-input" value="TIME VERMELHO" oninput="updateTeamLabels()">
     </div>
@@ -157,34 +166,60 @@
   let mode = null, players = [], arrows = [], events = [], history = [];
   let draggingPlayer = null, arrowStart = null, arrowEnd = null, passesBlue = 0, passesRed = 0, pendingEvent = null;
 
-  // SALVAR JOGO NA LISTA (CHAMADO PELA FRONT)
+  // GESTÃO DA LISTA DE JOGOS
   function saveCurrentGame() {
     const bName = document.getElementById('teamBlueName').value;
     const rName = document.getElementById('teamRedName').value;
     const timer = document.getElementById('displayTimer').innerText;
     const data = new Date().toLocaleString('pt-BR', { day:'2-digit', month:'2-digit', hour:'2-digit', minute:'2-digit' });
     
-    const resumo = `${bName} (${passesBlue}) x (${passesRed}) ${rName} | Tempo: ${timer} | ${data}`;
+    const resumo = `${bName} (${passesBlue}) x (${passesRed}) ${rName} | T: ${timer} | ${data}`;
     const obsBackup = obsArea.value;
 
-    // Remover mensagem de vazio
     const msg = document.getElementById('noGamesMsg');
-    if (msg) msg.remove();
+    if (msg) msg.style.display = 'none';
 
     const gamesContainer = document.getElementById('gamesSubList');
     const newBtn = document.createElement('button');
-    newBtn.style.cssText = "color: white; border: none; padding: 10px; border-radius: 4px; font-weight: bold; font-size: 11px; cursor: pointer; text-align: left; background: rgba(255,255,255,0.1); margin-bottom: 5px; width: 100%;";
+    newBtn.className = "game-item";
     newBtn.innerText = resumo;
     
+    // Variáveis para detectar Long Press
+    let pressTimer;
+
+    newBtn.onpointerdown = () => {
+        pressTimer = window.setTimeout(() => {
+            newBtn.classList.toggle('selected-to-delete');
+            navigator.vibrate ? navigator.vibrate(50) : null;
+        }, 800);
+    };
+    newBtn.onpointerup = () => clearTimeout(pressTimer);
+    newBtn.onpointerleave = () => clearTimeout(pressTimer);
+
     newBtn.onclick = () => {
-        if(confirm("Deseja carregar o histórico de anotações deste jogo?")) {
-            obsArea.value = `--- JOGO SALVO ---\n${resumo}\n--- ANOTAÇÕES ---\n${obsBackup}`;
-            toggleSidebar();
+        if (!newBtn.classList.contains('selected-to-delete')) {
+            if(confirm("Carregar as anotações deste jogo?")) {
+                obsArea.value = `--- JOGO RECUPERADO ---\n${resumo}\n--- NOTAS ---\n${obsBackup}`;
+                toggleSidebar();
+            }
         }
     };
     
     gamesContainer.prepend(newBtn);
-    alert("Jogo salvo na Lista de Jogos do Menu!");
+    alert("Jogo salvo na lista!");
+  }
+
+  function deleteSelectedGames() {
+    const selected = document.querySelectorAll('.selected-to-delete');
+    if (selected.length === 0) {
+        alert("Segure um jogo por 1 segundo para selecionar antes de clicar na lixeira.");
+        return;
+    }
+    if (confirm(`Excluir ${selected.length} jogo(s) selecionado(s)?`)) {
+        selected.forEach(el => el.remove());
+        const remaining = document.querySelectorAll('.game-item');
+        if (remaining.length === 0) document.getElementById('noGamesMsg').style.display = 'block';
+    }
   }
 
   // CRONÔMETRO
@@ -206,18 +241,11 @@
   }
   function getTimer() { return document.getElementById('displayTimer').innerText; }
 
-  // SIDEBAR
+  // SIDEBAR & TÁTICAS (MANTIDO)
   function toggleSidebar() { document.getElementById('sidebar').classList.toggle('open'); }
-  function toggleSub(id) { 
-    const el = document.getElementById(id);
-    el.style.display = (el.style.display === 'flex') ? 'none' : 'flex';
-  }
+  function toggleSub(id) { const el = document.getElementById(id); el.style.display = (el.style.display === 'flex') ? 'none' : 'flex'; }
+  function setModeFromSidebar(m) { mode = m; toggleSidebar(); updateVisuals(); }
 
-  function setModeFromSidebar(m) {
-    mode = m; toggleSidebar(); updateVisuals();
-  }
-
-  // TÁTICAS
   function applyTactic(tactic) {
     saveHistory(); players = [];
     const f = {
@@ -231,7 +259,6 @@
     drawField(); toggleSidebar();
   }
 
-  // LABELS
   function updateTeamLabels() {
     const b = document.getElementById('teamBlueName').value.toUpperCase();
     const r = document.getElementById('teamRedName').value.toUpperCase();
@@ -255,8 +282,7 @@
   function drawField() {
     ctx.fillStyle = '#1f7a3f'; ctx.fillRect(0, 0, canvas.width, canvas.height);
     ctx.strokeStyle = 'white'; ctx.lineWidth = 3;
-    ctx.strokeRect(20, 20, 760, 460); 
-    ctx.beginPath(); ctx.moveTo(400, 20); ctx.lineTo(400, 480); ctx.stroke();
+    ctx.strokeRect(20, 20, 760, 460); ctx.beginPath(); ctx.moveTo(400, 20); ctx.lineTo(400, 480); ctx.stroke();
     ctx.beginPath(); ctx.arc(400, 250, 60, 0, Math.PI * 2); ctx.stroke();
     ctx.strokeRect(20, 100, 120, 300); ctx.strokeRect(660, 100, 120, 300);
     const bN = document.getElementById('teamBlueName').value.substring(0,8);
@@ -301,10 +327,7 @@
   canvas.addEventListener('pointerup', () => { if (mode === 'arrow' && arrowStart && arrowEnd) { if (Math.hypot(arrowStart.x - arrowEnd.x, arrowStart.y - arrowEnd.y) > 15) arrows.push({ x1: arrowStart.x, y1: arrowStart.y, x2: arrowEnd.x, y2: arrowEnd.y }); mode = null; updateVisuals(); } draggingPlayer = null; arrowStart = null; arrowEnd = null; drawField(); });
 
   function setMode(m) { mode = m; updateVisuals(); }
-  function updateVisuals() { 
-    ['arrowBtn'].forEach(id => document.getElementById(id).classList.remove('active')); 
-    if(mode === 'arrow') document.getElementById('arrowBtn').classList.add('active'); 
-  }
+  function updateVisuals() { ['arrowBtn'].forEach(id => document.getElementById(id).classList.remove('active')); if(mode === 'arrow') document.getElementById('arrowBtn').classList.add('active'); }
 
   function prepareEvent(t) { pendingEvent = t; toggleSidebar(); }
   function undo() { if(history.length > 0){ const l = history.pop(); players=l.players; arrows=l.arrows; events=l.events; obsArea.value=l.obs; passesBlue=l.pBlue; passesRed=l.pRed; drawField(); } }
