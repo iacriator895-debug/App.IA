@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>QUADRO TÁTICO – PRO SCOUT</title>
+  <title>QUADRO TÁTICO – PRO SCOUT FINAL</title>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
   <style>
     html, body { margin: 0; padding: 0; height: 100%; background:#0b3d2e; font-family: sans-serif; overflow: hidden; }
@@ -21,7 +21,7 @@
     
     .menu-toggle { position: fixed; left: 15px; top: 15px; background: #10b981; color: white; border: none; padding: 10px; border-radius: 5px; cursor: pointer; z-index: 999; font-size: 20px; }
 
-    /* CRONÔMETRO POSICIONADO ABAIXO DO QUADRO */
+    /* CRONÔMETRO */
     .timer-container {
       background: #000; color: #10b981; padding: 8px 20px; border-radius: 12px;
       font-family: 'Courier New', Courier, monospace; font-size: 22px; font-weight: bold;
@@ -38,8 +38,9 @@
       box-shadow: 2px 2px 10px rgba(0,0,0,0.4); cursor: pointer; z-index: 1001; border: none;
     }
 
-    .project-title { color: white; font-size: 14px; font-weight: bold; margin-top: 50px; text-transform: uppercase; letter-spacing: 2px; }
+    .project-title { color: white; font-size: 14px; font-weight: bold; margin-top: 55px; text-transform: uppercase; letter-spacing: 2px; }
     
+    /* MENU SECTION */
     .menu-section { margin-bottom: 25px; }
     .menu-section-title { font-size: 12px; font-weight: bold; color: #10b981; margin-bottom: 10px; text-transform: uppercase; }
     .team-input { padding: 10px; border-radius: 4px; border: none; font-weight: bold; text-align: center; width: 100%; box-sizing: border-box; margin-bottom: 10px; }
@@ -49,6 +50,7 @@
     .btn-ball { background: #06b6d4; }
     .btn-clear { background: #be123c; }
 
+    /* QUICK CONTROLS */
     .quick-controls { display: flex; gap: 6px; margin: 10px 0; flex-wrap: wrap; justify-content: center; width: 95vw; }
     .btn-quick { padding: 10px 12px; border-radius: 25px; border: 2px solid transparent; color: white; font-weight: bold; font-size: 10px; text-transform: uppercase; min-width: 80px; }
     #blueBtn { background: #2563eb; } #redBtn { background: #dc2626; } 
@@ -57,6 +59,7 @@
     #arrowBtn { background: #ffffff; color: #000; } #undoBtn { background: #f59e0b; }
     #saveBtn { background: #000; }
 
+    /* SUB-MENUS */
     .sub-menu { display: none; flex-wrap: wrap; gap: 5px; background: rgba(255,255,255,0.1); padding: 10px; border-radius: 8px; margin-bottom: 10px; }
     .sub-menu button { color: white !important; border: none; padding: 8px 12px; border-radius: 4px; font-weight: bold; font-size: 10px; cursor: pointer; }
     
@@ -100,26 +103,34 @@
         <span>CONFIGURAÇÕES</span>
         <button onclick="toggleSidebar()" style="background:none; border:none; color:white; font-size:20px;">✕</button>
     </div>
+    
     <div class="menu-section">
         <div class="menu-section-title">Equipes</div>
         <input type="text" id="teamBlueName" class="team-input" value="TIME AZUL" oninput="updateTeamLabels()">
         <input type="text" id="teamRedName" class="team-input" value="TIME VERMELHO" oninput="updateTeamLabels()">
     </div>
+
     <div class="menu-section">
-        <div class="menu-section-title">Ações</div>
-        <button class="menu-btn btn-schema" onclick="toggleSub('schemaSub')">Esquemas</button>
+        <div class="menu-section-title">Estratégia</div>
+        <button class="menu-btn btn-schema" onclick="toggleSub('schemaSub')">Esquemas Táticos</button>
         <div id="schemaSub" class="sub-menu">
-            <button onclick="applyTactic('442')" style="background:#10b981">4-4-2</button>
-            <button onclick="applyTactic('433')" style="background:#10b981">4-3-3</button>
+            <button onclick="applyTactic('442')" style="background:#7c3aed">4-4-2</button>
+            <button onclick="applyTactic('433')" style="background:#7c3aed">4-3-3</button>
+            <button onclick="applyTactic('352')" style="background:#7c3aed">3-5-2</button>
+            <button onclick="applyTactic('541')" style="background:#7c3aed">5-4-1</button>
         </div>
-        <button class="menu-btn btn-ball" onclick="toggleSub('ballSub')">Bola Parada / Cartões</button>
+
+        <button class="menu-btn btn-ball" onclick="toggleSub('ballSub')">Bola Parada COMPLETA</button>
         <div id="ballSub" class="sub-menu">
             <button onclick="prepareEvent('Falta')" style="background:#06b6d4">Falta ✝️</button>
+            <button onclick="prepareEvent('Escanteio')" style="background:#06b6d4">Escanteio</button>
             <button onclick="prepareEvent('Meta')" style="background:#06b6d4">T. Meta ⚽</button>
+            <button onclick="prepareEvent('Penalti')" style="background:#06b6d4">Pênalti</button>
             <button onclick="prepareEvent('Amarelo')" style="background:#eab308">Amarelo</button>
             <button onclick="prepareEvent('Vermelho')" style="background:#be123c">Vermelho</button>
         </div>
     </div>
+
     <div class="menu-section">
         <button class="menu-btn btn-clear" onclick="clearField()">Limpar Tudo</button>
     </div>
@@ -134,7 +145,7 @@
   let mode = null, players = [], arrows = [], events = [], history = [];
   let draggingPlayer = null, arrowStart = null, arrowEnd = null, passesBlue = 0, passesRed = 0, pendingEvent = null;
 
-  // LÓGICA DO CRONÔMETRO
+  // CRONÔMETRO
   let timerSeconds = 0, timerInterval = null, isTimerRunning = false;
   function toggleTimer() {
     if (!isTimerRunning) {
@@ -145,10 +156,7 @@
         clearInterval(timerInterval);
     }
   }
-  function resetTimer() { 
-    clearInterval(timerInterval); isTimerRunning = false; timerSeconds = 0; 
-    document.getElementById('timerToggle').innerText = "Play"; updateTimerDisplay(); 
-  }
+  function resetTimer() { clearInterval(timerInterval); isTimerRunning = false; timerSeconds = 0; document.getElementById('timerToggle').innerText = "Play"; updateTimerDisplay(); }
   function updateTimerDisplay() {
     const m = Math.floor(timerSeconds / 60).toString().padStart(2, '0');
     const s = (timerSeconds % 60).toString().padStart(2, '0');
@@ -156,95 +164,86 @@
   }
   function getTimer() { return document.getElementById('displayTimer').innerText; }
 
+  // SIDEBAR
   function toggleSidebar() { document.getElementById('sidebar').classList.toggle('open'); }
   function toggleSub(id) { 
-      const el = document.getElementById(id);
-      el.style.display = (el.style.display === 'flex') ? 'none' : 'flex';
+    const el = document.getElementById(id);
+    el.style.display = (el.style.display === 'flex') ? 'none' : 'flex';
   }
 
+  // TÁTICAS
+  function applyTactic(tactic) {
+    saveHistory();
+    players = [];
+    const f = {
+      '442': [{x:60,y:250},{x:180,y:80},{x:180,y:190},{x:180,y:310},{x:180,y:420},{x:320,y:80},{x:320,y:190},{x:320,y:310},{x:320,y:420},{x:480,y:180},{x:480,y:320}],
+      '433': [{x:60,y:250},{x:180,y:80},{x:180,y:190},{x:180,y:310},{x:180,y:420},{x:350,y:120},{x:350,y:250},{x:350,y:380},{x:550,y:100},{x:550,y:250},{x:550,y:400}],
+      '352': [{x:60,y:250},{x:180,y:120},{x:180,y:250},{x:180,y:380},{x:320,y:50},{x:320,y:150},{x:320,y:250},{x:320,y:350},{x:320,y:450},{x:500,y:180},{x:500,y:320}],
+      '541': [{x:60,y:250},{x:160,y:60},{x:160,y:150},{x:160,y:250},{x:160,y:350},{x:160,y:440},{x:350,y:100},{x:350,y:200},{x:350,y:300},{x:350,y:400},{x:550,y:250}]
+    };
+    f[tactic].forEach(p => players.push({x:p.x, y:p.y, color:'blue'}));
+    obsArea.value += `[${getTimer()}] Tática ${tactic} aplicada.\n`;
+    drawField(); toggleSidebar();
+  }
+
+  // LABELS
   function updateTeamLabels() {
-    const bN = document.getElementById('teamBlueName').value.toUpperCase();
-    const rN = document.getElementById('teamRedName').value.toUpperCase();
-    document.getElementById('blueBtn').innerText = bN;
-    document.getElementById('redBtn').innerText = rN;
-    document.getElementById('passBlue').innerText = `+ ${bN}`;
-    document.getElementById('passRed').innerText = `+ ${rN}`;
+    const b = document.getElementById('teamBlueName').value.toUpperCase();
+    const r = document.getElementById('teamRedName').value.toUpperCase();
+    document.getElementById('blueBtn').innerText = b;
+    document.getElementById('redBtn').innerText = r;
+    document.getElementById('passBlue').innerText = `+ ${b}`;
+    document.getElementById('passRed').innerText = `+ ${r}`;
     drawField();
   }
 
-  function saveHistory() {
-    history.push({ players: JSON.parse(JSON.stringify(players)), arrows: JSON.parse(JSON.stringify(arrows)), events: JSON.parse(JSON.stringify(events)), obs: obsArea.value, pBlue: passesBlue, pRed: passesRed });
-    if (history.length > 30) history.shift();
-  }
+  function saveHistory() { history.push({ players: JSON.parse(JSON.stringify(players)), arrows: JSON.parse(JSON.stringify(arrows)), events: JSON.parse(JSON.stringify(events)), obs: obsArea.value, pBlue: passesBlue, pRed: passesRed }); if (history.length > 30) history.shift(); }
 
   function addPass(team) {
     saveHistory();
     const name = team === 'blue' ? document.getElementById('teamBlueName').value : document.getElementById('teamRedName').value;
     if(team === 'blue') passesBlue++; else passesRed++;
-    obsArea.value += `[${getTimer()}] PASSE ${name.toUpperCase()} contabilizado.\n`;
+    obsArea.value += `[${getTimer()}] PASSE ${name.toUpperCase()} registrado.\n`;
     drawField();
   }
 
   function drawField() {
     ctx.fillStyle = '#1f7a3f'; ctx.fillRect(0, 0, canvas.width, canvas.height);
     ctx.strokeStyle = 'white'; ctx.lineWidth = 3;
-    
-    // LINHAS ORIGINAIS PRESERVADAS
     ctx.strokeRect(20, 20, 760, 460); 
     ctx.beginPath(); ctx.moveTo(400, 20); ctx.lineTo(400, 480); ctx.stroke();
     ctx.beginPath(); ctx.arc(400, 250, 60, 0, Math.PI * 2); ctx.stroke();
     ctx.strokeRect(20, 100, 120, 300); ctx.strokeRect(660, 100, 120, 300);
-    
     const bN = document.getElementById('teamBlueName').value.substring(0,8);
     const rN = document.getElementById('teamRedName').value.substring(0,8);
     ctx.fillStyle = 'rgba(0,0,0,0.6)'; ctx.roundRect(250, 25, 300, 35, 10); ctx.fill();
     ctx.font = "bold 13px sans-serif"; ctx.fillStyle = "white"; ctx.textAlign = "center";
     ctx.fillText(`${bN}: ${passesBlue}   VS   ${rN}: ${passesRed}`, 400, 47);
-
     drawArrows(); drawEvents(); drawPlayers();
     if (mode === 'arrow' && arrowStart && arrowEnd) drawSingleArrow(arrowStart.x, arrowStart.y, arrowEnd.x, arrowEnd.y, "rgba(255,255,255,0.5)");
   }
 
   function drawEvents() {
     events.forEach(ev => {
-        let icon = "";
-        if (ev.type === "Falta") icon = "✝️";
-        else if (ev.type === "Meta") icon = "⚽";
-        else if (ev.type === "Amarelo") icon = "🟨";
-        else if (ev.type === "Vermelho") icon = "🟥";
-        ctx.font = `32px sans-serif`; ctx.textAlign = "center"; ctx.fillText(icon, ev.x, ev.y);
-        ctx.font = "bold 11px sans-serif"; ctx.fillStyle = "white"; ctx.fillText(ev.type, ev.x, ev.y + 25);
+      let icon = "";
+      if (ev.type === "Falta") icon = "✝️"; else if (ev.type === "Meta") icon = "⚽";
+      else if (ev.type === "Amarelo") icon = "🟨"; else if (ev.type === "Vermelho") icon = "🟥";
+      else if (ev.type === "Escanteio") icon = "◿"; else if (ev.type === "Penalti") icon = "⦿";
+      ctx.font = `32px sans-serif`; ctx.textAlign = "center"; ctx.fillText(icon, ev.x, ev.y);
+      ctx.font = "bold 11px sans-serif"; ctx.fillStyle = "white"; ctx.fillText(ev.type, ev.x, ev.y + 25);
     });
   }
 
-  function drawPlayers() {
-    players.forEach(p => {
-      ctx.beginPath(); ctx.arc(p.x, p.y, 18, 0, Math.PI * 2);
-      ctx.fillStyle = p.color === 'blue' ? '#1e40af' : '#b91c1c'; ctx.fill();
-      ctx.strokeStyle = 'white'; ctx.lineWidth = 3; ctx.stroke();
-    });
-  }
+  function drawPlayers() { players.forEach(p => { ctx.beginPath(); ctx.arc(p.x, p.y, 18, 0, Math.PI * 2); ctx.fillStyle = p.color === 'blue' ? '#1e40af' : '#b91c1c'; ctx.fill(); ctx.strokeStyle = 'white'; ctx.lineWidth = 3; ctx.stroke(); }); }
 
-  function drawSingleArrow(fx, fy, tx, ty, color) {
-    const head = 15; const angle = Math.atan2(ty - fy, tx - fx);
-    ctx.strokeStyle = color; ctx.lineWidth = 4; ctx.beginPath(); ctx.moveTo(fx, fy); ctx.lineTo(tx, ty);
-    ctx.lineTo(tx - head * Math.cos(angle - Math.PI / 6), ty - head * Math.sin(angle - Math.PI / 6));
-    ctx.moveTo(tx, ty); ctx.lineTo(tx - head * Math.cos(angle + Math.PI / 6), ty - head * Math.sin(angle + Math.PI / 6)); ctx.stroke();
-  }
+  function drawSingleArrow(fx, fy, tx, ty, color) { const head = 15; const angle = Math.atan2(ty - fy, tx - fx); ctx.strokeStyle = color; ctx.lineWidth = 4; ctx.beginPath(); ctx.moveTo(fx, fy); ctx.lineTo(tx, ty); ctx.lineTo(tx - head * Math.cos(angle - Math.PI / 6), ty - head * Math.sin(angle - Math.PI / 6)); ctx.moveTo(tx, ty); ctx.lineTo(tx - head * Math.cos(angle + Math.PI / 6), ty - head * Math.sin(angle + Math.PI / 6)); ctx.stroke(); }
   function drawArrows() { arrows.forEach(a => drawSingleArrow(a.x1, a.y1, a.x2, a.y2, "white")); }
 
-  function getPos(e) {
-    const rect = canvas.getBoundingClientRect();
-    return { x: (e.clientX - rect.left) * (800 / rect.width), y: (e.clientY - rect.top) * (500 / rect.height) };
-  }
+  function getPos(e) { const rect = canvas.getBoundingClientRect(); return { x: (e.clientX - rect.left) * (800 / rect.width), y: (e.clientY - rect.top) * (500 / rect.height) }; }
 
   canvas.addEventListener('pointerdown', e => {
     const pos = getPos(e);
-    if (pendingEvent) {
-        saveHistory(); events.push({ x: pos.x, y: pos.y, type: pendingEvent });
-        obsArea.value += `[${getTimer()}] ${pendingEvent.toUpperCase()} no campo.\n`;
-        pendingEvent = null; drawField(); return;
-    }
+    if (pendingEvent) { saveHistory(); events.push({ x: pos.x, y: pos.y, type: pendingEvent }); obsArea.value += `[${getTimer()}] ${pendingEvent.toUpperCase()} no campo.\n`; pendingEvent = null; drawField(); return; }
     const target = players.find(p => Math.hypot(p.x - pos.x, p.y - pos.y) <= 22);
     if (target) { saveHistory(); draggingPlayer = target; }
     else if (mode === 'blue' || mode === 'red') { saveHistory(); players.push({ x: pos.x, y: pos.y, color: mode }); mode = null; updateVisuals(); }
@@ -252,36 +251,14 @@
     canvas.setPointerCapture(e.pointerId); drawField();
   });
 
-  canvas.addEventListener('pointermove', e => {
-    const pos = getPos(e);
-    if (draggingPlayer) { draggingPlayer.x = pos.x; draggingPlayer.y = pos.y; }
-    else if (mode === 'arrow' && arrowStart) { arrowEnd = pos; }
-    drawField();
-  });
+  canvas.addEventListener('pointermove', e => { const pos = getPos(e); if (draggingPlayer) { draggingPlayer.x = pos.x; draggingPlayer.y = pos.y; } else if (mode === 'arrow' && arrowStart) { arrowEnd = pos; } drawField(); });
 
-  canvas.addEventListener('pointerup', () => {
-    if (mode === 'arrow' && arrowStart && arrowEnd) {
-      if (Math.hypot(arrowStart.x - arrowEnd.x, arrowStart.y - arrowEnd.y) > 15) arrows.push({ x1: arrowStart.x, y1: arrowStart.y, x2: arrowEnd.x, y2: arrowEnd.y });
-      mode = null; updateVisuals();
-    }
-    draggingPlayer = null; arrowStart = null; arrowEnd = null; drawField();
-  });
+  canvas.addEventListener('pointerup', () => { if (mode === 'arrow' && arrowStart && arrowEnd) { if (Math.hypot(arrowStart.x - arrowEnd.x, arrowStart.y - arrowEnd.y) > 15) arrows.push({ x1: arrowStart.x, y1: arrowStart.y, x2: arrowEnd.x, y2: arrowEnd.y }); mode = null; updateVisuals(); } draggingPlayer = null; arrowStart = null; arrowEnd = null; drawField(); });
 
   function setMode(m) { mode = m; updateVisuals(); }
-  function updateVisuals() {
-    ['blueBtn','redBtn','arrowBtn'].forEach(id => document.getElementById(id).classList.remove('active'));
-    if(mode === 'blue') document.getElementById('blueBtn').classList.add('active');
-    if(mode === 'red') document.getElementById('redBtn').classList.add('active');
-    if(mode === 'arrow') document.getElementById('arrowBtn').classList.add('active');
-  }
+  function updateVisuals() { ['blueBtn','redBtn','arrowBtn'].forEach(id => document.getElementById(id).classList.remove('active')); if(mode === 'blue') document.getElementById('blueBtn').classList.add('active'); if(mode === 'red') document.getElementById('redBtn').classList.add('active'); if(mode === 'arrow') document.getElementById('arrowBtn').classList.add('active'); }
 
   function prepareEvent(t) { pendingEvent = t; toggleSidebar(); }
-  function applyTactic(t) {
-      saveHistory(); players = [];
-      const formations = { '442': [{x:100,y:250},{x:200,y:80},{x:200,y:190},{x:200,y:310},{x:200,y:420}] };
-      (formations[t] || formations['442']).forEach(p => players.push({x:p.x, y:p.y, color:'blue'}));
-      drawField(); toggleSidebar();
-  }
   function undo() { if(history.length > 0){ const l = history.pop(); players=l.players; arrows=l.arrows; events=l.events; obsArea.value=l.obs; passesBlue=l.pBlue; passesRed=l.pRed; drawField(); } }
   function clearField() { if(confirm("Limpar campo?")){ saveHistory(); players=[]; arrows=[]; events=[]; passesBlue=0; passesRed=0; obsArea.value=""; drawField(); resetTimer(); toggleSidebar(); } }
 
