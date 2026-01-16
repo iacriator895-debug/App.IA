@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>QUADRO TÁTICO – PRO SCOUT</title>
+  <title>QUADRO TÁTICO – PRO SCOUT FINAL</title>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
   <style>
     html, body { margin: 0; padding: 0; height: 100%; background:#0b3d2e; font-family: sans-serif; overflow: hidden; }
@@ -49,6 +49,7 @@
     .btn-red { background: #dc2626; }
     .btn-schema { background: #7c3aed; }
     .btn-ball { background: #06b6d4; }
+    .btn-games { background: #f59e0b; }
     .btn-clear { background: #be123c; }
 
     /* QUICK CONTROLS */
@@ -59,8 +60,8 @@
     #arrowBtn { background: #ffffff; color: #000; } #undoBtn { background: #f59e0b; }
     #saveBtn { background: #000; }
 
-    .sub-menu { display: none; flex-wrap: wrap; gap: 5px; background: rgba(255,255,255,0.1); padding: 10px; border-radius: 8px; margin-bottom: 10px; }
-    .sub-menu button { color: white !important; border: none; padding: 8px 12px; border-radius: 4px; font-weight: bold; font-size: 10px; cursor: pointer; }
+    .sub-menu { display: none; flex-direction: column; gap: 5px; background: rgba(255,255,255,0.1); padding: 10px; border-radius: 8px; margin-bottom: 10px; }
+    .sub-menu button { color: white !important; border: none; padding: 8px 12px; border-radius: 4px; font-weight: bold; font-size: 10px; cursor: pointer; text-align: left; }
     
     canvas { width: 95vw; max-width: 600px; aspect-ratio: 8 / 5; background:#1f7a3f; border:4px solid #fff; border-radius:12px; touch-action: none; }
     .obs-container { width: 95vw; max-width: 600px; margin-top: 10px; }
@@ -102,6 +103,16 @@
     </div>
     
     <div class="menu-section">
+        <div class="menu-section-title">Jogos</div>
+        <button class="menu-btn btn-games" onclick="toggleSub('gamesSub')">Lista de Jogos</button>
+        <div id="gamesSub" class="sub-menu">
+            <button onclick="obsArea.value += 'Carregando Jogo: 4-4-2 vs 4-3-3 (Treino 15/01)\n'">4-4-2 vs 4-3-3 (15/01)</button>
+            <button onclick="obsArea.value += 'Carregando Jogo: Time A vs Time B (Amistoso 10/01)\n'">Time A vs Time B (10/01)</button>
+            <button style="border: 1px dashed #fff; opacity: 0.7;">+ Adicionar novo jogo</button>
+        </div>
+    </div>
+
+    <div class="menu-section">
         <div class="menu-section-title">Nomes das Equipes</div>
         <input type="text" id="teamBlueName" class="team-input" value="TIME AZUL" oninput="updateTeamLabels()">
         <input type="text" id="teamRedName" class="team-input" value="TIME VERMELHO" oninput="updateTeamLabels()">
@@ -116,7 +127,7 @@
     <div class="menu-section">
         <div class="menu-section-title">Estratégia</div>
         <button class="menu-btn btn-schema" onclick="toggleSub('schemaSub')">Esquemas Táticos</button>
-        <div id="schemaSub" class="sub-menu">
+        <div id="schemaSub" class="sub-menu" style="flex-direction: row; flex-wrap: wrap;">
             <button onclick="applyTactic('442')" style="background:#7c3aed">4-4-2</button>
             <button onclick="applyTactic('433')" style="background:#7c3aed">4-3-3</button>
             <button onclick="applyTactic('352')" style="background:#7c3aed">3-5-2</button>
@@ -124,7 +135,7 @@
         </div>
 
         <button class="menu-btn btn-ball" onclick="toggleSub('ballSub')">Bola Parada COMPLETA</button>
-        <div id="ballSub" class="sub-menu">
+        <div id="ballSub" class="sub-menu" style="flex-direction: row; flex-wrap: wrap;">
             <button onclick="prepareEvent('Falta')" style="background:#06b6d4">Falta ✝️</button>
             <button onclick="prepareEvent('Escanteio')" style="background:#06b6d4">Escanteio</button>
             <button onclick="prepareEvent('Meta')" style="background:#06b6d4">T. Meta ⚽</button>
@@ -175,15 +186,12 @@
   }
 
   function setModeFromSidebar(m) {
-    mode = m;
-    toggleSidebar();
-    updateVisuals();
+    mode = m; toggleSidebar(); updateVisuals();
   }
 
   // TÁTICAS
   function applyTactic(tactic) {
-    saveHistory();
-    players = [];
+    saveHistory(); players = [];
     const f = {
       '442': [{x:60,y:250},{x:180,y:80},{x:180,y:190},{x:180,y:310},{x:180,y:420},{x:320,y:80},{x:320,y:190},{x:320,y:310},{x:320,y:420},{x:480,y:180},{x:480,y:320}],
       '433': [{x:60,y:250},{x:180,y:80},{x:180,y:190},{x:180,y:310},{x:180,y:420},{x:350,y:120},{x:350,y:250},{x:350,y:380},{x:550,y:100},{x:550,y:250},{x:550,y:400}],
