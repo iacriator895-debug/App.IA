@@ -32,19 +32,17 @@
     }
     .timeline-event { display: inline-flex; flex-direction: column; align-items: center; background: rgba(255,255,255,0.1); padding: 5px 10px; border-radius: 6px; border-left: 3px solid #10b981; color: white; }
 
+    /* GRÁFICOS */
     .stats-container { width: 95vw; max-width: 600px; margin-top: 15px; background: rgba(0,0,0,0.3); padding: 15px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.1); }
-    .stats-title { color: #10b981; font-size: 12px; font-weight: bold; text-transform: uppercase; margin-bottom: 10px; text-align: center; }
-    .bar-wrapper { display: flex; align-items: center; margin-bottom: 8px; gap: 10px; }
-    .bar-label { color: white; font-size: 10px; font-weight: bold; width: 80px; text-overflow: ellipsis; overflow: hidden; white-space: nowrap; }
-    .bar-bg { flex-grow: 1; height: 12px; background: rgba(255,255,255,0.1); border-radius: 6px; overflow: hidden; }
+    .stats-title { color: #10b981; font-size: 11px; font-weight: bold; text-transform: uppercase; margin-bottom: 8px; text-align: center; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 5px; }
+    .bar-wrapper { display: flex; align-items: center; margin-bottom: 6px; gap: 10px; }
+    .bar-label { color: white; font-size: 10px; font-weight: bold; width: 80px; overflow: hidden; white-space: nowrap; }
+    .bar-bg { flex-grow: 1; height: 10px; background: rgba(255,255,255,0.1); border-radius: 5px; overflow: hidden; }
     .bar-fill { height: 100%; width: 0%; transition: width 0.5s ease; }
     .bar-count { color: white; font-size: 11px; font-weight: bold; width: 30px; text-align: right; }
 
     .obs-container { width: 95vw; max-width: 600px; margin-top: 15px; }
-    #obsArea { 
-      width: 100%; height: 180px; border-radius: 8px; background: rgba(255,255,255,0.1); 
-      color: white; padding: 15px; border: 2px solid #fff; font-size: 14px; line-height: 1.5; resize: vertical; box-sizing: border-box;
-    }
+    #obsArea { width: 100%; height: 180px; border-radius: 8px; background: rgba(255,255,255,0.1); color: white; padding: 15px; border: 2px solid #fff; font-size: 14px; box-sizing: border-box; }
 
     .quick-controls { display: flex; gap: 6px; margin: 10px 0; flex-wrap: wrap; justify-content: center; width: 95vw; }
     .btn-quick { padding: 10px 12px; border-radius: 25px; border: none; color: white; font-weight: bold; font-size: 10px; text-transform: uppercase; min-width: 85px; cursor: pointer; }
@@ -80,16 +78,28 @@
 </div>
 
 <div class="stats-container">
-    <div class="stats-title">Estatística de Passes</div>
+    <div class="stats-title">Passes</div>
     <div class="bar-wrapper">
-        <div id="labelBlue" class="bar-label">TIME AZUL</div>
-        <div class="bar-bg"><div id="fillBlue" class="bar-fill" style="background: #2563eb;"></div></div>
-        <div id="countBlue" class="bar-count">0</div>
+        <div class="labelBlueTxt bar-label">AZUL</div>
+        <div class="bar-bg"><div id="fillPassBlue" class="bar-fill" style="background: #2563eb;"></div></div>
+        <div id="countPassBlue" class="bar-count">0</div>
     </div>
     <div class="bar-wrapper">
-        <div id="labelRed" class="bar-label">TIME VERMELHO</div>
-        <div class="bar-bg"><div id="fillRed" class="bar-fill" style="background: #dc2626;"></div></div>
-        <div id="countRed" class="bar-count">0</div>
+        <div class="labelRedTxt bar-label">VERM</div>
+        <div class="bar-bg"><div id="fillPassRed" class="bar-fill" style="background: #dc2626;"></div></div>
+        <div id="countPassRed" class="bar-count">0</div>
+    </div>
+
+    <div class="stats-title" style="margin-top:10px">Escanteios</div>
+    <div class="bar-wrapper">
+        <div class="labelBlueTxt bar-label">AZUL</div>
+        <div class="bar-bg"><div id="fillEscBlue" class="bar-fill" style="background: #2563eb;"></div></div>
+        <div id="countEscBlue" class="bar-count">0</div>
+    </div>
+    <div class="bar-wrapper">
+        <div class="labelRedTxt bar-label">VERM</div>
+        <div class="bar-bg"><div id="fillEscRed" class="bar-fill" style="background: #dc2626;"></div></div>
+        <div id="countEscRed" class="bar-count">0</div>
     </div>
 </div>
 
@@ -100,7 +110,7 @@
 </div>
 
 <div class="obs-container">
-    <textarea id="obsArea" placeholder="Relatório da partida e observações técnicas detalhadas..."></textarea>
+    <textarea id="obsArea" placeholder="Anotações técnicas detalhadas..."></textarea>
 </div>
 
 <div id="sidebar" class="sidebar">
@@ -121,16 +131,19 @@
             <button onclick="prepareEvent('GOL', '⚽')">GOL ⚽</button>
             <button onclick="prepareEvent('Falta', '❌')">Falta ❌</button>
             <button onclick="prepareEvent('Penalti', '🎯')">Pênalti 🎯</button>
-            <button onclick="prepareEvent('Escanteio', '🚩')">Escanteio 🚩</button>
+            <p style="font-size: 9px; color: #fff; margin: 5px 0;">ESCANTEIO PARA:</p>
+            <button onclick="prepareEvent('ESC. AZUL', '🚩', 'blue')" style="background:#2563eb">ESC. AZUL 🚩</button>
+            <button onclick="prepareEvent('ESC. VERM', '🚩', 'red')" style="background:#dc2626">ESC. VERMELHO 🚩</button>
         </div>
     </div>
-    <button onclick="clearAll()" style="width:100%; background:#be123c; color:white; border:none; padding:10px; border-radius:5px; font-weight:bold; cursor:pointer; margin-top:20px;">LIMPAR TUDO</button>
+    <button onclick="clearAll()" style="width:100%; background:#be123c; color:white; border:none; padding:10px; border-radius:5px; font-weight:bold; margin-top:20px;">LIMPAR TUDO</button>
 </div>
 
 <script>
   const canvas = document.getElementById('field'); const ctx = canvas.getContext('2d');
   const obsArea = document.getElementById('obsArea'); const timeline = document.getElementById('timeline');
-  let players = [], events = [], history = [], passesBlue = 0, passesRed = 0, pendingEvent = null;
+  let players = [], events = [], history = [];
+  let passesBlue = 0, passesRed = 0, escBlue = 0, escRed = 0, pendingEvent = null;
 
   function init() { drawField(); updateUI(); }
 
@@ -153,17 +166,26 @@
   }
 
   function updateUI() {
-    const nameBlue = document.getElementById('teamBlueName').value;
-    const nameRed = document.getElementById('teamRedName').value;
-    document.getElementById('labelBlue').innerText = nameBlue;
-    document.getElementById('labelRed').innerText = nameRed;
-    document.getElementById('countBlue').innerText = passesBlue;
-    document.getElementById('countRed').innerText = passesRed;
-    const total = passesBlue + passesRed;
-    const percBlue = total === 0 ? 0 : (passesBlue / total) * 100;
-    const percRed = total === 0 ? 0 : (passesRed / total) * 100;
-    document.getElementById('fillBlue').style.width = percBlue + '%';
-    document.getElementById('fillRed').style.width = percRed + '%';
+    const nB = document.getElementById('teamBlueName').value;
+    const nR = document.getElementById('teamRedName').value;
+    
+    document.querySelectorAll('.labelBlueTxt').forEach(el => el.innerText = nB);
+    document.querySelectorAll('.labelRedTxt').forEach(el => el.innerText = nR);
+    
+    // Dados de Passes
+    document.getElementById('countPassBlue').innerText = passesBlue;
+    document.getElementById('countPassRed').innerText = passesRed;
+    const totalP = passesBlue + passesRed;
+    document.getElementById('fillPassBlue').style.width = (totalP === 0 ? 0 : (passesBlue/totalP)*100) + '%';
+    document.getElementById('fillPassRed').style.width = (totalP === 0 ? 0 : (passesRed/totalP)*100) + '%';
+
+    // Dados de Escanteios
+    document.getElementById('countEscBlue').innerText = escBlue;
+    document.getElementById('countEscRed').innerText = escRed;
+    const totalE = escBlue + escRed;
+    document.getElementById('fillEscBlue').style.width = (totalE === 0 ? 0 : (escBlue/totalE)*100) + '%';
+    document.getElementById('fillEscRed').style.width = (totalE === 0 ? 0 : (escRed/totalE)*100) + '%';
+
     drawField();
   }
 
@@ -173,11 +195,8 @@
     ctx.strokeRect(20,20,760,460);
     ctx.beginPath(); ctx.moveTo(400,20); ctx.lineTo(400,480); ctx.stroke();
     ctx.beginPath(); ctx.arc(400, 250, 60, 0, Math.PI*2); ctx.stroke();
-    ctx.beginPath(); ctx.arc(400, 250, 3, 0, Math.PI*2); ctx.fillStyle="white"; ctx.fill();
     ctx.strokeRect(20, 100, 100, 300); ctx.strokeRect(680, 100, 100, 300);
-    ctx.fillStyle = 'rgba(0,0,0,0.6)'; ctx.fillRect(350, 25, 100, 35);
-    ctx.fillStyle = "white"; ctx.font = "bold 16px sans-serif"; ctx.textAlign = "center";
-    ctx.fillText(`${passesBlue} - ${passesRed}`, 400, 48);
+    
     players.forEach(p => {
         ctx.beginPath(); ctx.arc(p.x, p.y, 18, 0, Math.PI*2);
         ctx.fillStyle = p.color=='blue'?'#1e40af':'#b91c1c'; ctx.fill();
@@ -186,8 +205,8 @@
     events.forEach(ev => { ctx.font="30px Arial"; ctx.fillText(ev.icon, ev.x, ev.y); });
   }
 
-  function saveHistory() { history.push({ pB: passesBlue, pR: passesRed, pl: JSON.parse(JSON.stringify(players)), ev: JSON.parse(JSON.stringify(events)) }); }
-  function undo() { if(history.length){ const l = history.pop(); passesBlue=l.pB; passesRed=l.pR; players=l.pl; events=l.ev; updateUI(); } }
+  function saveHistory() { history.push({ pB: passesBlue, pR: passesRed, eB: escBlue, eR: escRed, pl: JSON.parse(JSON.stringify(players)), ev: JSON.parse(JSON.stringify(events)) }); }
+  function undo() { if(history.length){ const l = history.pop(); passesBlue=l.pB; passesRed=l.pR; escBlue=l.eB; escRed=l.eR; players=l.pl; events=l.ev; updateUI(); } }
 
   let dragging = null;
   canvas.addEventListener('pointerdown', e => {
@@ -196,9 +215,11 @@
     const y = (e.clientY - rect.top) * (500 / rect.height);
     if (pendingEvent) {
         saveHistory();
+        if(pendingEvent.team === 'blue') escBlue++;
+        else if(pendingEvent.team === 'red') escRed++;
         events.push({x, y, icon: pendingEvent.icon});
         timelineAction(pendingEvent.type, pendingEvent.icon);
-        pendingEvent = null; drawField(); return;
+        pendingEvent = null; updateUI(); return;
     }
     dragging = players.find(p => Math.hypot(p.x - x, p.y - y) <= 22);
   });
@@ -225,13 +246,18 @@
   function resetTimer() { timerSeconds = 0; updateTimerDisplay(); }
   function toggleSidebar() { document.getElementById('sidebar').classList.toggle('open'); }
   function toggleSub(id) { const el = document.getElementById(id); el.style.display = (el.style.display === 'flex') ? 'none' : 'flex'; }
-  function prepareEvent(type, icon) { pendingEvent = {type, icon}; toggleSidebar(); }
+  
+  function prepareEvent(type, icon, team = null) { 
+    pendingEvent = {type, icon, team}; 
+    toggleSidebar(); 
+  }
+
   function applyTactic(t) {
     saveHistory(); players = [];
     if(t==='442') players = [{x:80,y:250},{x:180,y:100},{x:180,y:200},{x:180,y:300},{x:180,y:400},{x:350,y:100},{x:350,y:200},{x:350,y:300},{x:350,y:400},{x:550,y:180},{x:550,y:320}];
     drawField(); toggleSidebar();
   }
-  function clearAll() { if(confirm("Limpar tudo?")) { players=[]; events=[]; passesBlue=0; passesRed=0; resetTimer(); updateUI(); timeline.innerHTML=''; obsArea.value=''; } }
+  function clearAll() { if(confirm("Limpar tudo?")) { players=[]; events=[]; passesBlue=0; passesRed=0; escBlue=0; escRed=0; resetTimer(); updateUI(); timeline.innerHTML=''; obsArea.value=''; } }
   function savePDF() { const doc = new jsPDF('l'); doc.addImage(canvas.toDataURL(), 'PNG', 10, 10, 280, 175); doc.save('scout_completo.pdf'); }
 </script>
 </body>
