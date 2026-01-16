@@ -9,7 +9,6 @@
     html, body { margin: 0; padding: 0; height: 100%; background:#0b3d2e; font-family: sans-serif; overflow-x: hidden; }
     body { display:flex; flex-direction: column; align-items:center; padding-bottom: 50px; }
 
-    /* TÍTULO MANTIDO EM 65PX ARIAL NARROW */
     .project-title { 
       color: white; font-family: "Arial Narrow", sans-serif; font-weight: 700; font-style: italic; 
       font-size: 65px; margin-top: 50px; margin-bottom: 10px; text-transform: uppercase; text-align: center;
@@ -23,17 +22,14 @@
     .sidebar.open { left: 0; }
     .menu-toggle { position: fixed; left: 15px; top: 15px; background: #10b981; color: white; border: none; padding: 10px; border-radius: 5px; cursor: pointer; z-index: 999; font-size: 20px; }
 
-    /* CAMPO COM LINHAS PRESERVADAS */
     canvas { width: 95vw; max-width: 600px; aspect-ratio: 8 / 5; background:#1f7a3f; border:4px solid #fff; border-radius:12px; touch-action: none; }
 
-    /* TIMELINE */
     .timeline-container {
       width: 95vw; max-width: 600px; background: rgba(0,0,0,0.4); border: 2px solid #10b981;
       border-radius: 8px; margin-top: 10px; padding: 10px; overflow-x: auto; display: flex; gap: 15px; min-height: 45px;
     }
     .timeline-event { display: inline-flex; flex-direction: column; align-items: center; background: rgba(255,255,255,0.1); padding: 5px 10px; border-radius: 6px; border-left: 3px solid #10b981; color: white; }
 
-    /* GRÁFICO DE PASSES */
     .stats-container { width: 95vw; max-width: 600px; margin-top: 15px; background: rgba(0,0,0,0.3); padding: 15px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.1); }
     .stats-title { color: #10b981; font-size: 12px; font-weight: bold; text-transform: uppercase; margin-bottom: 10px; text-align: center; }
     .bar-wrapper { display: flex; align-items: center; margin-bottom: 8px; gap: 10px; }
@@ -42,30 +38,18 @@
     .bar-fill { height: 100%; width: 0%; transition: width 0.5s ease; }
     .bar-count { color: white; font-size: 11px; font-weight: bold; width: 30px; text-align: right; }
 
-    /* QUADRO DE ANOTAÇÕES AUMENTADO */
     .obs-container { width: 95vw; max-width: 600px; margin-top: 15px; }
     #obsArea { 
-      width: 100%; 
-      height: 180px; /* Aumentado de 60px para 180px */
-      border-radius: 8px; 
-      background: rgba(255,255,255,0.1); 
-      color: white; 
-      padding: 15px; 
-      border: 2px solid #fff; 
-      font-size: 14px;
-      line-height: 1.5;
-      resize: vertical;
-      box-sizing: border-box;
+      width: 100%; height: 180px; border-radius: 8px; background: rgba(255,255,255,0.1); 
+      color: white; padding: 15px; border: 2px solid #fff; font-size: 14px; line-height: 1.5; resize: vertical; box-sizing: border-box;
     }
 
     .quick-controls { display: flex; gap: 6px; margin: 10px 0; flex-wrap: wrap; justify-content: center; width: 95vw; }
     .btn-quick { padding: 10px 12px; border-radius: 25px; border: none; color: white; font-weight: bold; font-size: 10px; text-transform: uppercase; min-width: 85px; cursor: pointer; }
-    
     #btnStart { background: #10b981; } #btnHalf { background: #f59e0b; } #btnEnd { background: #be123c; }
     #passBlue { background: #2563eb; } #passRed { background: #dc2626; } #saveBtn { background: #000; }
 
     .timer-container { background: #000; color: #10b981; padding: 10px 25px; border-radius: 12px; font-size: 24px; font-weight: bold; margin-top: 15px; border: 2px solid #10b981; font-family: monospace; }
-    
     .team-input { padding: 8px; border-radius: 4px; border: none; width: 100%; margin-bottom: 5px; font-weight: bold; }
     .sub-menu { display: none; flex-direction: column; gap: 5px; background: rgba(255,255,255,0.1); padding: 10px; border-radius: 8px; }
     .sub-menu button { background: rgba(255,255,255,0.1); color: white; border: none; padding: 10px; text-align: left; cursor: pointer; font-size: 11px; font-weight: bold; }
@@ -133,8 +117,8 @@
         <button class="btn-quick" style="width:100%; background:#06b6d4; margin-top:5px;" onclick="toggleSub('ballSub')">Bola Parada</button>
         <div id="ballSub" class="sub-menu">
             <button onclick="prepareEvent('GOL', '⚽')">GOL ⚽</button>
-            <button onclick="prepareEvent('Falta', '✝️')">Falta ✝️</button>
-            <button onclick="prepareEvent('Penalti', '⦿')">Pênalti ⦿</button>
+            <button onclick="prepareEvent('Falta', '❌')">Falta ❌</button>
+            <button onclick="prepareEvent('Penalti', '🎯')">Pênalti 🎯</button>
         </div>
     </div>
     <button onclick="clearAll()" style="width:100%; background:#be123c; color:white; border:none; padding:10px; border-radius:5px; font-weight:bold; cursor:pointer; margin-top:20px;">LIMPAR TUDO</button>
@@ -160,6 +144,7 @@
   }
 
   function addPass(team) {
+    saveHistory();
     if(team === 'blue') passesBlue++; else passesRed++;
     updateUI();
   }
@@ -186,8 +171,7 @@
     ctx.beginPath(); ctx.moveTo(400,20); ctx.lineTo(400,480); ctx.stroke();
     ctx.beginPath(); ctx.arc(400, 250, 60, 0, Math.PI*2); ctx.stroke();
     ctx.beginPath(); ctx.arc(400, 250, 3, 0, Math.PI*2); ctx.fillStyle="white"; ctx.fill();
-    ctx.strokeRect(20, 100, 100, 300); // Área Esq
-    ctx.strokeRect(680, 100, 100, 300); // Área Dir
+    ctx.strokeRect(20, 100, 100, 300); ctx.strokeRect(680, 100, 100, 300);
     ctx.fillStyle = 'rgba(0,0,0,0.6)'; ctx.fillRect(350, 25, 100, 35);
     ctx.fillStyle = "white"; ctx.font = "bold 16px sans-serif"; ctx.textAlign = "center";
     ctx.fillText(`${passesBlue} - ${passesRed}`, 400, 48);
@@ -199,12 +183,16 @@
     events.forEach(ev => { ctx.font="30px Arial"; ctx.fillText(ev.icon, ev.x, ev.y); });
   }
 
+  function saveHistory() { history.push({ pB: passesBlue, pR: passesRed, pl: JSON.parse(JSON.stringify(players)), ev: JSON.parse(JSON.stringify(events)) }); }
+  function undo() { if(history.length){ const l = history.pop(); passesBlue=l.pB; passesRed=l.pR; players=l.pl; events=l.ev; updateUI(); } }
+
   let dragging = null;
   canvas.addEventListener('pointerdown', e => {
     const rect = canvas.getBoundingClientRect();
     const x = (e.clientX - rect.left) * (800 / rect.width);
     const y = (e.clientY - rect.top) * (500 / rect.height);
     if (pendingEvent) {
+        saveHistory();
         events.push({x, y, icon: pendingEvent.icon});
         timelineAction(pendingEvent.type, pendingEvent.icon);
         pendingEvent = null; drawField(); return;
@@ -236,13 +224,12 @@
   function toggleSub(id) { const el = document.getElementById(id); el.style.display = (el.style.display === 'flex') ? 'none' : 'flex'; }
   function prepareEvent(type, icon) { pendingEvent = {type, icon}; toggleSidebar(); }
   function applyTactic(t) {
-    players = [];
+    saveHistory(); players = [];
     if(t==='442') players = [{x:80,y:250},{x:180,y:100},{x:180,y:200},{x:180,y:300},{x:180,y:400},{x:350,y:100},{x:350,y:200},{x:350,y:300},{x:350,y:400},{x:550,y:180},{x:550,y:320}];
     drawField(); toggleSidebar();
   }
   function clearAll() { if(confirm("Limpar tudo?")) { players=[]; events=[]; passesBlue=0; passesRed=0; resetTimer(); updateUI(); timeline.innerHTML=''; obsArea.value=''; } }
   function savePDF() { const doc = new jsPDF('l'); doc.addImage(canvas.toDataURL(), 'PNG', 10, 10, 280, 175); doc.save('scout_final.pdf'); }
-  function undo() { /* Simplificado para manter o foco nas notas */ }
 </script>
 </body>
 </html>
