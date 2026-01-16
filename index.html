@@ -64,10 +64,9 @@
     #saveBtn { background: #000; }
 
     .sub-menu { display: none; flex-direction: column; gap: 5px; background: rgba(255,255,255,0.1); padding: 10px; border-radius: 8px; margin-bottom: 10px; }
-    .sub-menu button { color: white !important; border: none; padding: 10px; border-radius: 4px; font-weight: bold; font-size: 11px; cursor: pointer; text-align: left; background: rgba(255,255,255,0.05); margin-bottom: 4px; transition: 0.2s; }
+    .sub-menu button, .game-item { color: white !important; border: none; padding: 10px; border-radius: 4px; font-weight: bold; font-size: 11px; cursor: pointer; text-align: left; background: rgba(255,255,255,0.1); margin-bottom: 4px; transition: 0.2s; width: 100%; }
     
-    /* ESTILO SELEÇÃO PARA EXCLUIR */
-    .sub-menu button.selected-to-delete { border: 2px solid #f59e0b; background: rgba(190, 18, 60, 0.3); }
+    .game-item.selected-to-delete { border: 2px solid #f59e0b; background: rgba(190, 18, 60, 0.5); }
 
     canvas { width: 95vw; max-width: 600px; aspect-ratio: 8 / 5; background:#1f7a3f; border:4px solid #fff; border-radius:12px; touch-action: none; }
     .obs-container { width: 95vw; max-width: 600px; margin-top: 10px; }
@@ -75,7 +74,7 @@
     button.active { border-color: #fbbf24; transform: scale(1.05); }
   </style>
 </head>
-<body>
+<body onload="loadStoredData()">
 
 <button class="menu-toggle" onclick="toggleSidebar()">☰</button>
 <button class="whatsapp-float" onclick="shareWhatsApp()">💬</button>
@@ -112,9 +111,9 @@
     <div class="menu-section">
         <div class="menu-section-header">
             <div class="menu-section-title">Lista de Jogos</div>
-            <button class="btn-delete-mode" onclick="deleteSelectedGames()" title="Excluir selecionados">🗑️</button>
+            <button class="btn-delete-mode" onclick="deleteSelectedGames()">🗑️</button>
         </div>
-        <div id="gamesSubList" style="display: flex; flex-direction: column; gap: 5px; min-height: 40px; background: rgba(255,255,255,0.05); padding: 5px; border-radius: 8px;">
+        <div id="gamesSubList" style="display: flex; flex-direction: column; gap: 5px; min-height: 40px;">
             <p id="noGamesMsg" style="font-size: 11px; opacity: 0.5; text-align: center; margin: 10px 0;">Segure um jogo para selecionar e excluir.</p>
         </div>
     </div>
@@ -166,59 +165,71 @@
   let mode = null, players = [], arrows = [], events = [], history = [];
   let draggingPlayer = null, arrowStart = null, arrowEnd = null, passesBlue = 0, passesRed = 0, pendingEvent = null;
 
-  // GESTÃO DA LISTA DE JOGOS
-  function saveCurrentGame() {
-    const bName = document.getElementById('teamBlueName').value;
-    const rName = document.getElementById('teamRedName').value;
-    const timer = document.getElementById('displayTimer').innerText;
-    const data = new Date().toLocaleString('pt-BR', { day:'2-digit', month:'2-digit', hour:'2-digit', minute:'2-digit' });
-    
-    const resumo = `${bName} (${passesBlue}) x (${passesRed}) ${rName} | T: ${timer} | ${data}`;
-    const obsBackup = obsArea.value;
+  // PERSISTÊNCIA (LOCALSTORAGE)
+  function saveToStorage(games) { localStorage.setItem('scout_games', JSON.stringify(games)); }
+  function getFromStorage() { return JSON.parse(localStorage.getItem('scout_games')) || []; }
 
+  function loadStoredData() {
+    const games = getFromStorage();
+    games.forEach(g => renderGameItem(g));
+    
+    const savedBlue = localStorage.getItem('teamBlue');
+    const savedRed = localStorage.getItem('teamRed');
+    if(savedBlue) document.getElementById('teamBlueName').value = savedBlue;
+    if(savedRed) document.getElementById('teamRedName').value = savedRed;
+    updateTeamLabels();
+  }
+
+  function renderGameItem(gameObj) {
     const msg = document.getElementById('noGamesMsg');
     if (msg) msg.style.display = 'none';
 
     const gamesContainer = document.getElementById('gamesSubList');
     const newBtn = document.createElement('button');
     newBtn.className = "game-item";
-    newBtn.innerText = resumo;
+    newBtn.dataset.id = gameObj.id;
+    newBtn.innerText = gameObj.resumo;
     
-    // Variáveis para detectar Long Press
     let pressTimer;
-
-    newBtn.onpointerdown = () => {
-        pressTimer = window.setTimeout(() => {
-            newBtn.classList.toggle('selected-to-delete');
-            navigator.vibrate ? navigator.vibrate(50) : null;
-        }, 800);
-    };
+    newBtn.onpointerdown = () => { pressTimer = window.setTimeout(() => { newBtn.classList.toggle('selected-to-delete'); navigator.vibrate ? navigator.vibrate(50) : null; }, 800); };
     newBtn.onpointerup = () => clearTimeout(pressTimer);
-    newBtn.onpointerleave = () => clearTimeout(pressTimer);
-
-    newBtn.onclick = () => {
-        if (!newBtn.classList.contains('selected-to-delete')) {
-            if(confirm("Carregar as anotações deste jogo?")) {
-                obsArea.value = `--- JOGO RECUPERADO ---\n${resumo}\n--- NOTAS ---\n${obsBackup}`;
-                toggleSidebar();
-            }
-        }
-    };
+    newBtn.onclick = () => { if (!newBtn.classList.contains('selected-to-delete')) { if(confirm("Carregar as anotações deste jogo?")) { obsArea.value = `--- JOGO RECUPERADO ---\n${gameObj.resumo}\n--- NOTAS ---\n${gameObj.obs}`; toggleSidebar(); } } };
     
     gamesContainer.prepend(newBtn);
-    alert("Jogo salvo na lista!");
+  }
+
+  function saveCurrentGame() {
+    const bName = document.getElementById('teamBlueName').value;
+    const rName = document.getElementById('teamRedName').value;
+    const timer = document.getElementById('displayTimer').innerText;
+    const data = new Date().toLocaleString('pt-BR', { day:'2-digit', month:'2-digit', hour:'2-digit', minute:'2-digit' });
+    
+    const gameData = {
+        id: Date.now(),
+        resumo: `${bName} (${passesBlue}) x (${passesRed}) ${rName} | T: ${timer} | ${data}`,
+        obs: obsArea.value
+    };
+
+    const games = getFromStorage();
+    games.push(gameData);
+    saveToStorage(games);
+    renderGameItem(gameData);
+    alert("Jogo gravado permanentemente!");
   }
 
   function deleteSelectedGames() {
     const selected = document.querySelectorAll('.selected-to-delete');
-    if (selected.length === 0) {
-        alert("Segure um jogo por 1 segundo para selecionar antes de clicar na lixeira.");
-        return;
-    }
-    if (confirm(`Excluir ${selected.length} jogo(s) selecionado(s)?`)) {
-        selected.forEach(el => el.remove());
-        const remaining = document.querySelectorAll('.game-item');
-        if (remaining.length === 0) document.getElementById('noGamesMsg').style.display = 'block';
+    if (selected.length === 0) { alert("Segure um jogo para selecionar."); return; }
+    
+    if (confirm(`Excluir ${selected.length} jogo(s)?`)) {
+        let games = getFromStorage();
+        selected.forEach(el => {
+            const id = parseInt(el.dataset.id);
+            games = games.filter(g => g.id !== id);
+            el.remove();
+        });
+        saveToStorage(games);
+        if (games.length === 0) document.getElementById('noGamesMsg').style.display = 'block';
     }
   }
 
@@ -241,10 +252,22 @@
   }
   function getTimer() { return document.getElementById('displayTimer').innerText; }
 
-  // SIDEBAR & TÁTICAS (MANTIDO)
+  // UI & DRAW
   function toggleSidebar() { document.getElementById('sidebar').classList.toggle('open'); }
   function toggleSub(id) { const el = document.getElementById(id); el.style.display = (el.style.display === 'flex') ? 'none' : 'flex'; }
   function setModeFromSidebar(m) { mode = m; toggleSidebar(); updateVisuals(); }
+
+  function updateTeamLabels() {
+    const b = document.getElementById('teamBlueName').value;
+    const r = document.getElementById('teamRedName').value;
+    localStorage.setItem('teamBlue', b);
+    localStorage.setItem('teamRed', r);
+    document.getElementById('sideBlueBtn').innerText = `Adicionar JOGADOR ${b.toUpperCase()}`;
+    document.getElementById('sideRedBtn').innerText = `Adicionar JOGADOR ${r.toUpperCase()}`;
+    document.getElementById('passBlue').innerText = `+ ${b.toUpperCase()}`;
+    document.getElementById('passRed').innerText = `+ ${r.toUpperCase()}`;
+    drawField();
+  }
 
   function applyTactic(tactic) {
     saveHistory(); players = [];
@@ -257,16 +280,6 @@
     f[tactic].forEach(p => players.push({x:p.x, y:p.y, color:'blue'}));
     obsArea.value += `[${getTimer()}] Tática ${tactic} aplicada.\n`;
     drawField(); toggleSidebar();
-  }
-
-  function updateTeamLabels() {
-    const b = document.getElementById('teamBlueName').value.toUpperCase();
-    const r = document.getElementById('teamRedName').value.toUpperCase();
-    document.getElementById('sideBlueBtn').innerText = `Adicionar JOGADOR ${b}`;
-    document.getElementById('sideRedBtn').innerText = `Adicionar JOGADOR ${r}`;
-    document.getElementById('passBlue').innerText = `+ ${b}`;
-    document.getElementById('passRed').innerText = `+ ${r}`;
-    drawField();
   }
 
   function saveHistory() { history.push({ players: JSON.parse(JSON.stringify(players)), arrows: JSON.parse(JSON.stringify(arrows)), events: JSON.parse(JSON.stringify(events)), obs: obsArea.value, pBlue: passesBlue, pRed: passesRed }); if (history.length > 30) history.shift(); }
@@ -289,7 +302,7 @@
     const rN = document.getElementById('teamRedName').value.substring(0,8);
     ctx.fillStyle = 'rgba(0,0,0,0.6)'; ctx.roundRect(250, 25, 300, 35, 10); ctx.fill();
     ctx.font = "bold 13px sans-serif"; ctx.fillStyle = "white"; ctx.textAlign = "center";
-    ctx.fillText(`${bN}: ${passesBlue}   VS   ${rN}: ${passesRed}`, 400, 47);
+    ctx.fillText(`${bN.toUpperCase()}: ${passesBlue}   VS   ${rN.toUpperCase()}: ${passesRed}`, 400, 47);
     drawArrows(); drawEvents(); drawPlayers();
     if (mode === 'arrow' && arrowStart && arrowEnd) drawSingleArrow(arrowStart.x, arrowStart.y, arrowEnd.x, arrowEnd.y, "rgba(255,255,255,0.5)");
   }
@@ -335,8 +348,6 @@
 
   async function savePDF() { drawField(); const doc = new jsPDF({orientation:'landscape'}); doc.addImage(canvas.toDataURL("image/jpeg"), 'JPEG', 10, 10, 280, 175); doc.save('tatica.pdf'); }
   async function shareWhatsApp() { drawField(); canvas.toBlob(b => { if(navigator.share) navigator.share({files:[new File([b],'t.png',{type:'image/png'})]}); }); }
-
-  updateTeamLabels();
 </script>
 </body>
 </html>
