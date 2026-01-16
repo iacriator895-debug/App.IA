@@ -20,6 +20,8 @@
       padding: 20px; box-sizing: border-box; overflow-y: auto;
     }
     .sidebar.open { left: 0; }
+    .sidebar-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; border-bottom: 1px solid #10b981; padding-bottom: 10px; }
+    
     .menu-toggle { position: fixed; left: 15px; top: 15px; background: #10b981; color: white; border: none; padding: 10px; border-radius: 5px; cursor: pointer; z-index: 999; font-size: 20px; }
 
     canvas { width: 95vw; max-width: 600px; aspect-ratio: 8 / 5; background:#1f7a3f; border:4px solid #fff; border-radius:12px; touch-action: none; }
@@ -119,6 +121,7 @@
             <button onclick="prepareEvent('GOL', '⚽')">GOL ⚽</button>
             <button onclick="prepareEvent('Falta', '❌')">Falta ❌</button>
             <button onclick="prepareEvent('Penalti', '🎯')">Pênalti 🎯</button>
+            <button onclick="prepareEvent('Escanteio', '🚩')">Escanteio 🚩</button>
         </div>
     </div>
     <button onclick="clearAll()" style="width:100%; background:#be123c; color:white; border:none; padding:10px; border-radius:5px; font-weight:bold; cursor:pointer; margin-top:20px;">LIMPAR TUDO</button>
@@ -229,7 +232,7 @@
     drawField(); toggleSidebar();
   }
   function clearAll() { if(confirm("Limpar tudo?")) { players=[]; events=[]; passesBlue=0; passesRed=0; resetTimer(); updateUI(); timeline.innerHTML=''; obsArea.value=''; } }
-  function savePDF() { const doc = new jsPDF('l'); doc.addImage(canvas.toDataURL(), 'PNG', 10, 10, 280, 175); doc.save('scout_final.pdf'); }
+  function savePDF() { const doc = new jsPDF('l'); doc.addImage(canvas.toDataURL(), 'PNG', 10, 10, 280, 175); doc.save('scout_completo.pdf'); }
 </script>
 </body>
 </html>
