@@ -49,7 +49,6 @@
     .btn-red { background: #dc2626; }
     .btn-schema { background: #7c3aed; }
     .btn-ball { background: #06b6d4; }
-    .btn-games { background: #f59e0b; }
     .btn-clear { background: #be123c; }
 
     /* QUICK CONTROLS */
@@ -58,10 +57,11 @@
     #passBlue { background: #2563eb; border: 2px dashed rgba(255,255,255,0.6); } 
     #passRed { background: #dc2626; border: 2px dashed rgba(255,255,255,0.6); }
     #arrowBtn { background: #ffffff; color: #000; } #undoBtn { background: #f59e0b; }
+    #saveGameBtn { background: #f97316; } /* Cor Laranja para Salvar Jogo */
     #saveBtn { background: #000; }
 
     .sub-menu { display: none; flex-direction: column; gap: 5px; background: rgba(255,255,255,0.1); padding: 10px; border-radius: 8px; margin-bottom: 10px; }
-    .sub-menu button { color: white !important; border: none; padding: 8px 12px; border-radius: 4px; font-weight: bold; font-size: 10px; cursor: pointer; text-align: left; }
+    .sub-menu button { color: white !important; border: none; padding: 10px; border-radius: 4px; font-weight: bold; font-size: 11px; cursor: pointer; text-align: left; background: rgba(255,255,255,0.05); margin-bottom: 4px; }
     
     canvas { width: 95vw; max-width: 600px; aspect-ratio: 8 / 5; background:#1f7a3f; border:4px solid #fff; border-radius:12px; touch-action: none; }
     .obs-container { width: 95vw; max-width: 600px; margin-top: 10px; }
@@ -81,6 +81,7 @@
     <button id="passRed" class="btn-quick" onclick="addPass('red')">+ PASSE</button>
     <button id="arrowBtn" class="btn-quick" onclick="setMode('arrow')">Seta</button>
     <button id="undoBtn" class="btn-quick" onclick="undo()">Desfazer</button>
+    <button id="saveGameBtn" class="btn-quick" onclick="saveCurrentGame()">SALVAR JOGO</button>
     <button id="saveBtn" class="btn-quick" onclick="savePDF()">PDF</button>
 </div>
 
@@ -103,12 +104,9 @@
     </div>
     
     <div class="menu-section">
-        <div class="menu-section-title">Jogos</div>
-        <button class="menu-btn btn-games" onclick="toggleSub('gamesSub')">Lista de Jogos</button>
-        <div id="gamesSub" class="sub-menu">
-            <button onclick="obsArea.value += 'Carregando Jogo: 4-4-2 vs 4-3-3 (Treino 15/01)\n'">4-4-2 vs 4-3-3 (15/01)</button>
-            <button onclick="obsArea.value += 'Carregando Jogo: Time A vs Time B (Amistoso 10/01)\n'">Time A vs Time B (10/01)</button>
-            <button style="border: 1px dashed #fff; opacity: 0.7;">+ Adicionar novo jogo</button>
+        <div class="menu-section-title">Lista de Jogos</div>
+        <div id="gamesSubList" style="display: flex; flex-direction: column; gap: 5px;">
+            <p id="noGamesMsg" style="font-size: 11px; opacity: 0.5; text-align: center;">Nenhum jogo salvo ainda.</p>
         </div>
     </div>
 
@@ -158,6 +156,36 @@
   
   let mode = null, players = [], arrows = [], events = [], history = [];
   let draggingPlayer = null, arrowStart = null, arrowEnd = null, passesBlue = 0, passesRed = 0, pendingEvent = null;
+
+  // SALVAR JOGO NA LISTA (CHAMADO PELA FRONT)
+  function saveCurrentGame() {
+    const bName = document.getElementById('teamBlueName').value;
+    const rName = document.getElementById('teamRedName').value;
+    const timer = document.getElementById('displayTimer').innerText;
+    const data = new Date().toLocaleString('pt-BR', { day:'2-digit', month:'2-digit', hour:'2-digit', minute:'2-digit' });
+    
+    const resumo = `${bName} (${passesBlue}) x (${passesRed}) ${rName} | Tempo: ${timer} | ${data}`;
+    const obsBackup = obsArea.value;
+
+    // Remover mensagem de vazio
+    const msg = document.getElementById('noGamesMsg');
+    if (msg) msg.remove();
+
+    const gamesContainer = document.getElementById('gamesSubList');
+    const newBtn = document.createElement('button');
+    newBtn.style.cssText = "color: white; border: none; padding: 10px; border-radius: 4px; font-weight: bold; font-size: 11px; cursor: pointer; text-align: left; background: rgba(255,255,255,0.1); margin-bottom: 5px; width: 100%;";
+    newBtn.innerText = resumo;
+    
+    newBtn.onclick = () => {
+        if(confirm("Deseja carregar o histórico de anotações deste jogo?")) {
+            obsArea.value = `--- JOGO SALVO ---\n${resumo}\n--- ANOTAÇÕES ---\n${obsBackup}`;
+            toggleSidebar();
+        }
+    };
+    
+    gamesContainer.prepend(newBtn);
+    alert("Jogo salvo na Lista de Jogos do Menu!");
+  }
 
   // CRONÔMETRO
   let timerSeconds = 0, timerInterval = null, isTimerRunning = false;
